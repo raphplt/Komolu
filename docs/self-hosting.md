@@ -1,0 +1,60 @@
+# Auto-hébergement
+
+Komolu V1 est un site statique. Les données personnelles vivent dans IndexedDB sur le navigateur de chaque utilisateur. Sauvegarder le conteneur ne sauvegarde donc aucune tâche, note ou média utilisateur.
+
+## Docker Compose
+
+Prérequis : Docker Engine et Docker Compose récents, connexion Internet pour télécharger les images et dépendances au premier build.
+
+```bash
+git clone https://github.com/raphplt/Komolu.git
+cd Komolu
+docker compose up --build --detach --wait
+docker compose ps
+```
+
+L'application répond sur [http://127.0.0.1:8080](http://127.0.0.1:8080). Le service est limité à la boucle locale par défaut. Si le port est déjà occupé, change uniquement le port hôte dans `compose.yaml`, par exemple `127.0.0.1:8081:8080`. Cette nouvelle origine possède un autre stockage : utilise export/import pour déplacer les données.
+
+Le build utilise Node 24.21.0 et `npm ci --include=dev`, puis copie `dist/` dans Nginx 1.30.5. Les images sont épinglées par digest dans le Dockerfile pour figer leurs contenus ; leurs mises à jour de sécurité doivent être examinées puis leurs digests renouvelés. La bibliothèque npm est figée par `package-lock.json`.
+
+Le conteneur final tourne sous l'utilisateur `nginx`, sans privilèges supplémentaires, système de fichiers en lecture seule et espace temporaire en mémoire de 16 Mio. Aucun volume de données ni secret nécessaire. Le contrôle de santé vérifie la page toutes les 30 secondes. Les logs HTTP sont disponibles avec `docker compose logs --tail 100`.
+
+```bash
+# Après mise à jour des sources
+git pull --ff-only
+docker compose up --build --detach --wait
+
+# Arrêter cette installation
+docker compose down
+```
+
+Ces commandes ne modifient pas les données du navigateur. Télécharge néanmoins une sauvegarde avant une mise à jour importante. Pour revenir à une version antérieure, reconstruis son tag ; une future version de schéma pourrait nécessiter la sauvegarde compatible de cette version.
+
+## Exposer sur Internet
+
+HTTPS est nécessaire hors localhost (notamment pour `crypto.randomUUID` et le presse-papiers) : une URL HTTP sur une adresse LAN ne constitue pas une installation prise en charge. Utilise un domaine et un reverse proxy HTTPS devant `127.0.0.1:8080`. Le proxy doit pouvoir joindre la boucle locale de l'hôte ; un proxy lui-même conteneurisé doit plutôt partager un réseau Docker avec Komolu et joindre son port interne 8080. Ne publie pas le serveur de développement Vite en production.
+
+Nginx fournit une CSP, `nosniff`, `Referrer-Policy: no-referrer` et refuse l'affichage en iframe. Les styles inline sont autorisés pour les réglages React ; les médias `blob:` locaux sont autorisés. Les fichiers versionnés sous `/assets/` sont mis en cache pour un an ; le HTML et les notices demandent une revalidation. Le HTTPS/HSTS se configure au niveau du reverse proxy. GitHub Pages n'utilise pas ce Nginx et ne reçoit donc pas ces en-têtes personnalisés.
+
+## Hébergement statique et sous-chemin
+
+```bash
+npm ci --include=dev
+npm run build
+```
+
+Sers **le contenu de `dist/`** par HTTP(S), pas le dépôt source et pas `file://`. La base Vite `./` rend les assets relatifs : la racine ou un sous-chemin comme `/Komolu/` fonctionnent. Garde la barre oblique finale du répertoire. L'application n'utilise pas de routes client nécessitant une réécriture SPA ; les fichiers absents peuvent répondre 404.
+
+Le ZIP de release statique contient les mêmes fichiers. Il ne contient pas de données personnelles. `npm run preview` permet une vérification locale mais n'est pas destiné à être le serveur de production.
+
+## GitHub Pages
+
+Le workflow `.github/workflows/ci.yml` contrôle le format, ESLint, TypeScript, les unités et les parcours Chromium/Firefox ; il reconstruit Docker et rejoue les parcours contre Nginx. Les pull requests exécutent ces contrôles sans publier. Seuls un push sur `main` ou une exécution manuelle sur `main` peuvent publier après réussite.
+
+Avant la première publication, un administrateur doit choisir **Settings → Pages → Source: GitHub Actions**. Le job `deploy` utilise l'environnement `github-pages` et seul ce job dispose de `pages: write` et `id-token: write`. Les actions sont épinglées à un commit. L'adresse visée est [https://raphplt.github.io/Komolu/](https://raphplt.github.io/Komolu/) ; vérifier son accès et une session réelle après publication.
+
+Référence : [Vite — déploiement statique](https://vite.dev/guide/static-deploy), consultée le 13 octobre 2026.
+
+## Limites
+
+Il n'existe ni API de santé des données, ni restauration côté serveur, ni synchronisation. L'application déjà chargée peut continuer à fonctionner sans réseau, mais cette V1 n'installe aucun service worker et ne garantit pas un nouveau chargement hors ligne. Le mode privé du navigateur peut effacer son stockage en fin de session. Les réglages et médias restent propres à chaque origine.

@@ -47,3 +47,15 @@ Référence : fiche projet fournie le 13 octobre 2026. La réalisation reste une
 ## Critère de clôture
 
 L'application et ses sources sont utilisables localement et distribuables, les parcours essentiels passent, les limites connues et les étapes externes restantes sont documentées. Aucun critère non vérifié ne sera déclaré acquis.
+
+## État de livraison — 13 octobre 2026
+
+- **Phase 0 terminée** : fiche de vision conservée, choix et références documentés, absence de `RTK.md` consignée.
+- **Phase 1 terminée** : première boucle de travail persistée et testable.
+- **Phase 2 terminée** : trois décors, Studio, widgets, espaces, sessions, médias, Focus et données personnelles.
+- **Phase 3 terminée** : portabilité et robustesse ; 80 tests unitaires et 48 exécutions Chromium/Firefox validaient le jalon 0.8.
+- **Phase 4 réalisée localement** : version 1.0.0, formatage, CI/Pages, Docker reproductible Node 24.21.0 et Nginx 1.30.5 épinglés par digest, licence MIT et notices distribuées, documentation et cinq captures réelles. Le conteneur tourne sans root, en lecture seule, avec contrôle de santé sur le port 8080.
+
+Vérifications finales : `format:check`, ESLint, TypeScript, 80 unités, build statique et audit npm (aucune vulnérabilité signalée). Les 52 exécutions E2E passent sur Vite (29 secondes), puis les 52 exécutions de production passent dans Chromium/Firefox derrière Nginx et sa CSP, incluant absence de requête extérieure, audio déclenché explicitement et vidéo locale. Les réponses HTTP vérifient HTML sans cache immuable, assets hachés immuables, MIME et licences présents. Les détails et limites figurent dans `docs/testing.md`.
+
+**Publication encore à faire** : activer GitHub Pages avec source GitHub Actions, pousser la version, vérifier CI et site final, créer le tag/release avec archive statique. Aucun déploiement distant n'est présenté comme acquis à ce stade. Une bêta humaine, Safari/iOS réel, un lecteur d'écran et une écoute humaine restent à organiser ; la disponibilité juridique du nom n'est pas certifiée.

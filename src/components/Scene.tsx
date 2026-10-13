@@ -1,6 +1,121 @@
 import type { Scene as SceneType } from '../core/model'
 export function Scene({ scene }: { scene: SceneType }) {
-  if (scene === 'minimal') return <svg className="scene-art" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="minimal-glow"><stop stopColor="#fffdf7" /><stop offset="1" stopColor="#ececdf" /></radialGradient></defs><path fill="url(#minimal-glow)" d="M0 0h1600v1000H0z" /><g fill="none" stroke="#c3c8ac" strokeWidth="1" opacity=".35"><path d="M-100 750Q350 420 820 860T1700 670"/><path d="M-100 765Q350 435 820 875T1700 685"/><path d="M-100 780Q350 450 820 890T1700 700"/><path d="M-100 795Q350 465 820 905T1700 715"/></g><g fill="#aebba0" opacity=".17"><ellipse cx="1520" cy="710" rx="57" ry="145" transform="rotate(-38 1520 710)"/><ellipse cx="1490" cy="895" rx="66" ry="150" transform="rotate(40 1490 895)"/></g><path d="M1590 1020Q1500 760 1500 620" stroke="#aebba0" opacity=".23" strokeWidth="3" fill="none"/></svg>
+  if (scene === 'minimal')
+    return (
+      <svg
+        className="scene-art"
+        viewBox="0 0 1600 1000"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <defs>
+          <radialGradient id="minimal-glow">
+            <stop stopColor="#fffdf7" />
+            <stop offset="1" stopColor="#ececdf" />
+          </radialGradient>
+        </defs>
+        <path fill="url(#minimal-glow)" d="M0 0h1600v1000H0z" />
+        <g fill="none" stroke="#c3c8ac" strokeWidth="1" opacity=".35">
+          <path d="M-100 750Q350 420 820 860T1700 670" />
+          <path d="M-100 765Q350 435 820 875T1700 685" />
+          <path d="M-100 780Q350 450 820 890T1700 700" />
+          <path d="M-100 795Q350 465 820 905T1700 715" />
+        </g>
+        <g fill="#aebba0" opacity=".17">
+          <ellipse cx="1520" cy="710" rx="57" ry="145" transform="rotate(-38 1520 710)" />
+          <ellipse cx="1490" cy="895" rx="66" ry="150" transform="rotate(40 1490 895)" />
+        </g>
+        <path
+          d="M1590 1020Q1500 760 1500 620"
+          stroke="#aebba0"
+          opacity=".23"
+          strokeWidth="3"
+          fill="none"
+        />
+      </svg>
+    )
   const night = scene === 'deep'
-  return <svg className="scene-art landscape-art" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id={`sky-${scene}`} x2="0" y2="1"><stop stopColor={night ? '#242435' : '#b9c9b9'} /><stop offset=".7" stopColor={night ? '#55506b' : '#ede0c4'} /><stop offset="1" stopColor={night ? '#bc8f93' : '#d2b799'} /></linearGradient><linearGradient id={`hill-${scene}`} x2="0" y2="1"><stop stopColor={night ? '#343346' : '#859080'} /><stop offset="1" stopColor={night ? '#1b2230' : '#425950'} /></linearGradient><radialGradient id="window-light"><stop stopColor="#ffe6a8" stopOpacity=".4"/><stop offset="1" stopColor="#ffe6a8" stopOpacity="0"/></radialGradient></defs><path fill={`url(#sky-${scene})`} d="M0 0h1600v1000H0z" />{night ? <><circle fill="#ece4d3" cx="1240" cy="180" r="43"/><circle fill="#2c2b3c" cx="1224" cy="168" r="41"/>{[[180,120],[250,290],[690,110],[1050,320],[1420,90],[1490,380],[500,210],[910,210]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r={i%2+1} fill="#e7ddd0" opacity=".6"/>)}</> : <circle cx="1240" cy="310" r="78" fill="#f7e4b3" opacity=".85"/>}<path d="M0 590L200 330 380 540 660 330 1020 640 1350 390 1600 580V1000H0Z" fill={night ? '#565368' : '#b2b69e'} opacity=".6"/><path d="M0 730Q290 420 640 680T1600 650V1000H0Z" fill={night ? '#414252' : '#929f89'}/><path d="M0 850Q350 710 760 785T1600 700V1000H0Z" fill={`url(#hill-${scene})`}/><path d="M0 985Q420 820 810 940T1600 855V1000H0Z" fill={night ? '#171d28' : '#405a4e'}/><g fill={night ? '#202936' : '#536e5b'}>{[40,110,170,1350,1425,1510,1590].map((x,i)=><g key={x} transform={`translate(${x}, ${610+(i%3)*50}) scale(${.8+(i%3)*.25})`}><path d="M0 0L-45 100H-27L-62 158H-36L-80 220H80L36 158H62L27 100H45Z"/><path d="M-5 200h10v60h-10Z"/></g>)}</g>{!night && <g transform="translate(1090 695)"><ellipse cx="70" cy="90" rx="190" ry="120" fill="url(#window-light)"/><path d="M0 10H175V136H0Z" fill="#6d6353"/><path d="M-20 10L88-65 198 10Z" fill="#48564b"/><path d="M30 47h42v45H30ZM103 47h42v45h-42Z" fill="#f5cc81"/><path d="M50 47v45M124 47v45M30 69h42M103 69h42" stroke="#776a4d" strokeWidth="4"/><path d="M127-42h18v-37h-18Z" fill="#656557"/><path d="M137-85q-22-22-5-45q14-21-2-45" fill="none" stroke="#f1ead8" opacity=".25" strokeWidth="10" strokeLinecap="round"/><path d="M85 96h28v40H85Z" fill="#4b4d42"/></g>}</svg>
+  return (
+    <svg
+      className="scene-art landscape-art"
+      viewBox="0 0 1600 1000"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={`sky-${scene}`} x2="0" y2="1">
+          <stop stopColor={night ? '#242435' : '#b9c9b9'} />
+          <stop offset=".7" stopColor={night ? '#55506b' : '#ede0c4'} />
+          <stop offset="1" stopColor={night ? '#bc8f93' : '#d2b799'} />
+        </linearGradient>
+        <linearGradient id={`hill-${scene}`} x2="0" y2="1">
+          <stop stopColor={night ? '#343346' : '#859080'} />
+          <stop offset="1" stopColor={night ? '#1b2230' : '#425950'} />
+        </linearGradient>
+        <radialGradient id="window-light">
+          <stop stopColor="#ffe6a8" stopOpacity=".4" />
+          <stop offset="1" stopColor="#ffe6a8" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <path fill={`url(#sky-${scene})`} d="M0 0h1600v1000H0z" />
+      {night ? (
+        <>
+          <circle fill="#ece4d3" cx="1240" cy="180" r="43" />
+          <circle fill="#2c2b3c" cx="1224" cy="168" r="41" />
+          {[
+            [180, 120],
+            [250, 290],
+            [690, 110],
+            [1050, 320],
+            [1420, 90],
+            [1490, 380],
+            [500, 210],
+            [910, 210],
+          ].map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r={(i % 2) + 1} fill="#e7ddd0" opacity=".6" />
+          ))}
+        </>
+      ) : (
+        <circle cx="1240" cy="310" r="78" fill="#f7e4b3" opacity=".85" />
+      )}
+      <path
+        d="M0 590L200 330 380 540 660 330 1020 640 1350 390 1600 580V1000H0Z"
+        fill={night ? '#565368' : '#b2b69e'}
+        opacity=".6"
+      />
+      <path d="M0 730Q290 420 640 680T1600 650V1000H0Z" fill={night ? '#414252' : '#929f89'} />
+      <path d="M0 850Q350 710 760 785T1600 700V1000H0Z" fill={`url(#hill-${scene})`} />
+      <path d="M0 985Q420 820 810 940T1600 855V1000H0Z" fill={night ? '#171d28' : '#405a4e'} />
+      <g fill={night ? '#202936' : '#536e5b'}>
+        {[40, 110, 170, 1350, 1425, 1510, 1590].map((x, i) => (
+          <g
+            key={x}
+            transform={`translate(${x}, ${610 + (i % 3) * 50}) scale(${0.8 + (i % 3) * 0.25})`}
+          >
+            <path d="M0 0L-45 100H-27L-62 158H-36L-80 220H80L36 158H62L27 100H45Z" />
+            <path d="M-5 200h10v60h-10Z" />
+          </g>
+        ))}
+      </g>
+      {!night && (
+        <g transform="translate(1090 695)">
+          <ellipse cx="70" cy="90" rx="190" ry="120" fill="url(#window-light)" />
+          <path d="M0 10H175V136H0Z" fill="#6d6353" />
+          <path d="M-20 10L88-65 198 10Z" fill="#48564b" />
+          <path d="M30 47h42v45H30ZM103 47h42v45h-42Z" fill="#f5cc81" />
+          <path d="M50 47v45M124 47v45M30 69h42M103 69h42" stroke="#776a4d" strokeWidth="4" />
+          <path d="M127-42h18v-37h-18Z" fill="#656557" />
+          <path
+            d="M137-85q-22-22-5-45q14-21-2-45"
+            fill="none"
+            stroke="#f1ead8"
+            opacity=".25"
+            strokeWidth="10"
+            strokeLinecap="round"
+          />
+          <path d="M85 96h28v40H85Z" fill="#4b4d42" />
+        </g>
+      )}
+    </svg>
+  )
 }

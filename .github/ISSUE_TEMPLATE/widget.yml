@@ -1,0 +1,18 @@
+name: Proposer un widget ou une amélioration
+description: Un usage concret qui facilite la concentration.
+title: '[Idée] '
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Quel besoin rencontres-tu ?
+      description: Décris un moment précis de ton utilisation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposition et alternatives
+      description: Comment garder l'expérience simple, accessible et locale ?
+    validations:
+      required: true

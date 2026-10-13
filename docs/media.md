@@ -18,7 +18,7 @@ Les URL `blob:` sont révoquées après inspection ou démontage du fond. Aucun 
 
 Chaque piste possède son propre gain, puis passe dans un gain maître et un compresseur limitant les crêtes. Mute conserve les volumes. Les transitions utilisent des rampes et les boucles reçoivent une courte atténuation à leur jonction. Pause suspend le contexte après le fondu ; Arrêter libère les sources et leurs buffers ; le démontage ferme le contexte. Des identifiants de révision invalident les décodages devenus obsolètes après pause, arrêt, changement de profil ou démontage.
 
-Le son de fin est distinct des ambiances. `armCompletionSound()` doit être appelé depuis un geste explicite (Démarrer/Reprendre), et `useCompletionSound(timer, enabled)` observe les nouvelles fins de phase. Le profil doit activer `sound`. Le premier état chargé n’est jamais joué ; une revendication atomique `timer.lastSoundKey` dans IndexedDB choisit un seul onglet parmi ceux autorisés à émettre le son. Une fin ancienne n’est pas rejouée après rechargement. Pas de notification système ni de demande de permission.
+Le son de fin est distinct des ambiances. `armCompletionSound()` doit être appelé depuis un geste explicite (Démarrer/Reprendre), et `useCompletionSound(timer, enabled, dataEpoch)` observe les nouvelles fins de phase. Le changement de `dataEpoch` après import ou reset invalide les anciennes fins. Le profil doit activer `sound`. Le premier état chargé n’est jamais joué ; une revendication atomique `timer.lastSoundKey` dans IndexedDB choisit un seul onglet parmi ceux autorisés à émettre le son. Une fin ancienne n’est pas rejouée après rechargement. Pas de notification système ni de demande de permission.
 
 ## Contrats d’interface
 

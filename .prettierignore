@@ -1,0 +1,8 @@
+node_modules/
+dist/
+artifacts/
+playwright-report/
+test-results/
+package-lock.json
+docs/product.md
+public/THIRD_PARTY_NOTICES.txt

@@ -1,0 +1,23 @@
+name: Proposer un décor ou une ambiance
+description: Une direction visuelle ou sonore pour un espace de concentration.
+title: '[Ambiance] '
+body:
+  - type: textarea
+    id: concept
+    attributes:
+      label: Intention et aperçu
+      description: Décris l'ambiance et joins un aperçu si possible, avec des données fictives.
+    validations:
+      required: true
+  - type: textarea
+    id: license
+    attributes:
+      label: Provenance et licence des ressources
+      description: Pour chaque ressource, donne son auteur, sa source et sa licence de redistribution. Aucune image ou musique trouvée sans droits vérifiés.
+    validations:
+      required: true
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Lisibilité et mouvements
+      description: Comment restent lisibles les widgets ? Que voit-on avec les mouvements réduits ?

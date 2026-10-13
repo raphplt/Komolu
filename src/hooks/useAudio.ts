@@ -14,40 +14,94 @@ export function useAudio(profile: AudioProfile) {
   const serialized = JSON.stringify(profile)
   useEffect(() => {
     profileRef.current = JSON.parse(serialized) as AudioProfile
-    void engine.update(profileRef.current).catch(error => setError(error instanceof Error ? error.message : 'Impossible de mettre à jour les sons.'))
+    void engine
+      .update(profileRef.current)
+      .catch((error) =>
+        setError(error instanceof Error ? error.message : 'Impossible de mettre à jour les sons.'),
+      )
   }, [engine, serialized])
-  useEffect(() => () => { void engine.dispose().catch(reportError) }, [engine])
+  useEffect(
+    () => () => {
+      void engine.dispose().catch(reportError)
+    },
+    [engine],
+  )
   const play = useCallback(async () => {
     const revision = ++operation.current
-    setLoading(true); setError(null)
-    try { await engine.play(profileRef.current) } catch (error) { setError(error instanceof Error ? error.message : 'Impossible de lire les sons.') }
-    finally { if (revision === operation.current) { setLoading(false); setPlaying(engine.playing) } }
+    setLoading(true)
+    setError(null)
+    try {
+      await engine.play(profileRef.current)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Impossible de lire les sons.')
+    } finally {
+      if (revision === operation.current) {
+        setLoading(false)
+        setPlaying(engine.playing)
+      }
+    }
   }, [engine])
-  const halt = useCallback(async (stop: boolean) => {
-    ++operation.current; setPlaying(false); setLoading(false)
-    try { if (stop) await engine.stop(); else await engine.pause() } catch { setError('Impossible de suspendre les sons. Recharge la page si le problème persiste.') }
-  }, [engine])
+  const halt = useCallback(
+    async (stop: boolean) => {
+      ++operation.current
+      setPlaying(false)
+      setLoading(false)
+      try {
+        if (stop) await engine.stop()
+        else await engine.pause()
+      } catch {
+        setError('Impossible de suspendre les sons. Recharge la page si le problème persiste.')
+      }
+    },
+    [engine],
+  )
   useEffect(() => {
-    const stopForReplacement = () => { void halt(true) }
+    const stopForReplacement = () => {
+      void halt(true)
+    }
     window.addEventListener('komolu-personal-data-replaced', stopForReplacement)
     return () => window.removeEventListener('komolu-personal-data-replaced', stopForReplacement)
   }, [halt])
-  return { playing, loading, error, play, pause: () => halt(false), stop: () => halt(true), clearError: () => setError(null) }
+  return {
+    playing,
+    loading,
+    error,
+    play,
+    pause: () => halt(false),
+    stop: () => halt(true),
+    clearError: () => setError(null),
+  }
 }
 export type AudioController = ReturnType<typeof useAudio>
 /** Initial persisted completions are a baseline, never a request to replay a chime. */
 export function useCompletionSound(timer: TimerState, enabled: boolean, dataEpoch = ''): void {
-  const observed = useRef({ startedAt: timer.startedAt, completed: timer.completedPhases, dataEpoch })
+  const observed = useRef({
+    startedAt: timer.startedAt,
+    completed: timer.completedPhases,
+    dataEpoch,
+  })
   useEffect(() => {
     const previous = observed.current
     observed.current = { startedAt: timer.startedAt, completed: timer.completedPhases, dataEpoch }
-    if (dataEpoch !== previous.dataEpoch || timer.completedPhases <= previous.completed || !enabled || !timer.profile.sound || !completionSoundIsArmed()) return
+    if (
+      dataEpoch !== previous.dataEpoch ||
+      timer.completedPhases <= previous.completed ||
+      !enabled ||
+      !timer.profile.sound ||
+      !completionSoundIsArmed()
+    )
+      return
     const key = `${timer.startedAt}:${timer.completedPhases}`
     let winner = false
-    void mutateState(state => {
+    void mutateState((state) => {
       const currentKey = `${state.timer.startedAt}:${state.timer.completedPhases}`
       if (currentKey !== key || state.timer.lastSoundKey === key) return
-      state.timer.lastSoundKey = key; winner = true
-    }).then(() => { if (winner) return playCompletionSound() }).catch(reportError)
+      state.timer.lastSoundKey = key
+      winner = true
+    })
+      .then(() => {
+        if (winner) return playCompletionSound()
+      })
+      .catch(reportError)
   }, [timer.startedAt, timer.completedPhases, timer.profile.sound, enabled, dataEpoch])
 }
