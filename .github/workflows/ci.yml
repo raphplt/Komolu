@@ -26,6 +26,15 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium firefox
+      - name: Provide an audio output for headless Firefox
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y pulseaudio
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=komolu_ci
+          pactl set-default-sink komolu_ci
+          pactl info
+          pactl list short sinks
       - run: npm run test:e2e
       - name: Build production container
         run: docker compose up --build --detach --wait
@@ -34,6 +43,16 @@ jobs:
       - name: Stop production container
         if: always()
         run: docker compose down
+      - name: Keep browser diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: browser-diagnostics
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Upload site
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5

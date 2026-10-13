@@ -24,7 +24,7 @@ docker compose up --build --detach --wait
 PLAYWRIGHT_BASE_URL=http://127.0.0.1:8080 npm run test:e2e
 ```
 
-`PLAYWRIGHT_BASE_URL` désactive le lancement de Vite. La CI exécute les deux suites, développement puis production, avant de publier le build sur Pages.
+`PLAYWRIGHT_BASE_URL` désactive le lancement de Vite. La CI exécute les deux suites, développement puis production, avant de publier le build sur Pages. Le runner sans périphérique sonore démarre PulseAudio avec une sortie virtuelle `module-null-sink` : Firefox dispose ainsi d’une vraie sortie système pour Web Audio, sans remplacer les API audio par des mocks. Les traces et captures sont conservées sept jours si la CI échoue.
 
 ## Couverture
 
