@@ -1,25 +1,54 @@
-import { useState } from 'react'
-import { Leaf, Play, Pause, RotateCcw, Volume2, VolumeX, Plus, Check, Circle } from 'lucide-react'
-import { actions, activeWorkspace, useAppState, useNow } from './core/store'
-import { formatDuration, timerValue } from './core/timer'
-import { ambientAudio } from './core/audio'
+import { useEffect, useState } from 'react'
+import { ArrowUpRight, Check, ChevronDown, Expand, Leaf, Lightbulb, Maximize2, Minimize2, PanelRight, Settings2, SlidersHorizontal, Volume2, VolumeX } from 'lucide-react'
+import type { AppState } from './core/model'
+import { actions, activeWorkspace, reportError, useAppState } from './core/store'
+import { armCompletionSound } from './core/audio'
+import { useAudio, useCompletionSound } from './hooks/useAudio'
+import { Background } from './components/Background'
+import { AudioPanel } from './components/AudioPanel'
+import { ClockWidget, NotesWidget, TasksWidget, TimerWidget } from './components/Widgets'
+import { Studio, WidgetFrame } from './components/Studio'
+import { TimerSettings } from './components/TimerSettings'
+import { PreferencesDialog, ThoughtDialog, WorkspaceDialog } from './components/WorkspaceDialogs'
+import { DataPanel } from './components/DataPanel'
+import { Scene } from './components/Scene'
+import { Dialog } from './components/shared'
+import { act } from './core/ui'
+type Panel = 'workspaces' | 'timer' | 'thoughts' | 'preferences' | 'data' | 'audio' | null
 export default function App() {
   const { state, error, clearError } = useAppState()
-  const now = useNow()
-  const [task, setTask] = useState('')
-  const [audio, setAudio] = useState(false)
-  if (!state) return <main className="loading">Ton petit coin se prépare…{error && <p role="alert">{error}</p>}</main>
+  if (!state) return <main className="loading"><Leaf size={32} /><h1>Ton petit coin se prépare…</h1>{error && <p role="alert">{error}</p>}</main>
+  return <Experience state={state} error={error} clearError={clearError} />
+}
+function Experience({ state, error, clearError }: { state: AppState; error: string | null; clearError: () => void }) {
   const workspace = activeWorkspace(state)
-  const running = state.timer.status === 'running'
-  const act = (promise: Promise<unknown>) => { void promise.catch(() => undefined) }
-  return <main className={`app scene-${workspace.background.scene}`}>
-    <div className="landscape" aria-hidden="true"><div className="sun" /><div className="hill hill-one" /><div className="hill hill-two" /><div className="hill hill-three" /></div>
-    <header><a className="brand" href="#"><Leaf size={25} /> komolu<span>TON PETIT COIN POUR TE CONCENTRER</span></a><nav aria-label="Espaces">{state.workspaces.map(space => <button key={space.id} aria-pressed={space.id === workspace.id} onClick={() => act(actions.switchWorkspace(space.id))}>{space.name}</button>)}</nav><span className="local-status">● Tout reste ici</span></header>
-    {error && <div role="alert" className="error">{error}<button onClick={clearError}>Fermer</button></div>}
-    <section className="welcome"><p>FAIS UN PEU DE PLACE À L’ESSENTIEL</p><h1>Un moment pour toi.</h1><p>{workspace.description}</p></section>
-    <section className="desk" aria-label="Mon espace de concentration"><aside className="clock card"><p className="eyebrow">ICI, MAINTENANT</p><time>{new Date(now).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</time><p>{new Date(now).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p><div className="clock-quote">Une chose<br />à la fois.</div></aside>
-      <article className="timer card"><p className="eyebrow">{state.timer.profile.phases[state.timer.phaseIndex].label}</p><div className="timer-digits" role="timer" aria-label="Temps de session">{formatDuration(timerValue(state.timer, now))}</div><p>{state.timer.status === 'waiting' ? 'Une pause bien méritée. Prêt·e ?' : state.timer.status === 'completed' ? 'C’est tout pour cette session. Bien joué.' : 'À ton rythme. Sans pression.'}</p><div className="timer-controls"><button className="primary" onClick={() => act(actions.timer(running ? 'pause' : 'start'))}>{running ? <Pause size={18} /> : <Play size={18} />}{running ? 'Pause' : state.timer.status === 'paused' ? 'Reprendre' : 'Démarrer'}</button><button className="icon-button" aria-label="Réinitialiser la session" onClick={() => act(actions.timer('stop'))}><RotateCcw size={18} /></button></div><p className="timer-cycle">Cycle {state.timer.cycle + 1} / {state.timer.profile.repeats || '∞'} · {state.timer.profile.name}</p>{state.timer.clockWarning && <p role="status">L’heure système a changé. Reprends quand tu es prêt·e.</p>}</article>
-      <article className="tasks card"><p className="eyebrow">UN PETIT PAS</p><h2>L’essentiel du jour <span>{state.privateData.tasks.filter(t => t.done).length}/{state.privateData.tasks.length}</span></h2><form onSubmit={e => { e.preventDefault(); const submitted = task; act(actions.addTask(submitted).then(() => setTask(current => current === submitted ? '' : current))) }}><input aria-label="Nouvelle tâche" placeholder="Qu’as-tu en tête ?" value={task} onChange={e => setTask(e.target.value)} maxLength={500} /><button className="icon-button" aria-label="Ajouter la tâche"><Plus size={18} /></button></form>{state.privateData.tasks.length === 0 && <p className="empty">Une petite intention suffit.<br />Le reste peut attendre.</p>}<ul>{state.privateData.tasks.map(item => <li key={item.id}><button aria-label={item.done ? `Rouvrir ${item.title}` : `Terminer ${item.title}`} onClick={() => act(actions.toggleTask(item.id))}>{item.done ? <Check size={18} /> : <Circle size={18} />}</button><button className={item.done ? 'done task-title' : 'task-title'} onClick={() => act(actions.selectTask(item.id))}>{item.title}</button>{item.id === state.privateData.activeTaskId && <span aria-label="Tâche active">•</span>}</li>)}</ul></article>
-    </section><footer><button className="audio-button" onClick={() => { if (audio) { ambientAudio.pause(); setAudio(false) } else void ambientAudio.start(workspace.audio.master).then(() => setAudio(true)).catch(() => undefined) }}>{audio ? <Volume2 size={18} /> : <VolumeX size={18} />} Bruit brun <span>{audio ? 'Activé' : 'Écouter'}</span></button><p>Ton espace. Ton rythme. Ta concentration.</p><span>Komolu · 0.1</span></footer>
+  const audio = useAudio(workspace.audio)
+  useCompletionSound(state.timer, true)
+  const [panel, setPanel] = useState<Panel>(null)
+  const [studio, setStudio] = useState(false)
+  const [selected, setSelected] = useState<string | null>(null)
+  const [fullscreen, setFullscreen] = useState(!!document.fullscreenElement)
+  const [systemMotion, setSystemMotion] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches)
+  const focus = state.preferences.focusMode
+  const reducedMotion = systemMotion || state.preferences.reducedMotion
+  const toggleTimer = () => { if (state.timer.status !== 'running') void armCompletionSound().catch(reportError); act(actions.timer(state.timer.status === 'running' ? 'pause' : 'start')) }
+  const toggleFocus = () => { setStudio(false); act(actions.update(s => { s.preferences.focusMode = !s.preferences.focusMode })) }
+  useEffect(() => { const query = matchMedia('(prefers-reduced-motion: reduce)'); const handler = () => setSystemMotion(query.matches); query.addEventListener('change', handler); const full = () => setFullscreen(!!document.fullscreenElement); document.addEventListener('fullscreenchange', full); return () => { query.removeEventListener('change', handler); document.removeEventListener('fullscreenchange', full) } }, [])
+  useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') { if (!panel) setStudio(false); return } if (state.preferences.shortcuts === false || panel || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.repeat) return; const target = event.target as HTMLElement; if (target.closest('input, textarea, select, [contenteditable="true"], dialog')) return; if (event.code === 'Space' && !target.closest('button, a')) { event.preventDefault(); toggleTimer() } if (event.key.toLowerCase() === 'n') { event.preventDefault(); setPanel('thoughts') } if (event.key.toLowerCase() === 'f') { event.preventDefault(); toggleFocus() } }; window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler) })
+  const close = () => setPanel(null)
+  return <main className={`app scene-${workspace.background.scene} ${focus ? 'focus-mode' : ''} ${studio ? 'studio-open' : ''} ${reducedMotion ? 'reduced-motion' : ''}`}>
+    <Background workspace={workspace} reducedMotion={reducedMotion}><Scene scene={workspace.background.scene} /></Background>
+    <header className="app-header"><a href="#" className="brand" aria-label="Komolu, accueil" onClick={e => { e.preventDefault(); setStudio(false); act(actions.update(s => { s.preferences.focusMode = false })) }}><span className="brand-mark"><Leaf size={23} strokeWidth={1.5} /></span>komolu<span className="brand-tagline">TON PETIT COIN DE CALME</span></a><div className="header-actions"><button className="workspace-switch" onClick={() => setPanel('workspaces')}><span className={`scene-dot ${workspace.background.scene}`} />{workspace.name}<ChevronDown size={15} /></button><button className={`studio-button ${studio ? 'active' : ''}`} aria-pressed={studio} onClick={() => { setStudio(!studio); if (focus) act(actions.update(s => { s.preferences.focusMode = false })) }}><SlidersHorizontal size={16} /> Studio</button></div></header>
+    {error && <div role="alert" className="error global-error"><span>{error}</span><button onClick={clearError}>Fermer</button></div>}
+    <div className="workspace-body"><section className="welcome"><div className="welcome-kicker"><span /> TON ESPACE. TON RYTHME.</div><h1>{workspace.background.scene === 'cozy' ? 'Un refuge pour tes idées.' : workspace.background.scene === 'deep' ? 'Le calme. Et rien d’autre.' : <>Fais de la place<br className="mobile-break" /> à l’essentiel.</>}</h1><p>{workspace.description} Une chose à la fois.</p><div className="welcome-doodle" aria-hidden="true">✳</div></section>
+    {studio && <p className="studio-hint"><SlidersHorizontal size={14} /> Tout est à sa place. Ou presque : à toi de composer.</p>}
+    <section className="widget-grid" aria-label="Mon espace de concentration">{workspace.widgets.filter(w => w.visible).map(widget => <WidgetFrame key={`${workspace.id}-${widget.id}`} widget={widget} studio={studio} selected={selected === widget.id} onSelect={setSelected}>{widget.type === 'clock' ? <ClockWidget widget={widget} /> : widget.type === 'timer' ? <TimerWidget state={state} onSettings={() => setPanel('timer')} onToggle={toggleTimer} /> : widget.type === 'tasks' ? <TasksWidget state={state} /> : widget.type === 'notes' ? <NotesWidget notes={state.privateData.notes} /> : <AudioPanel workspace={workspace} audio={audio} />}</WidgetFrame>)}</section>
+    {workspace.widgets.every(w => !w.visible) && <div className="empty-canvas"><Leaf size={40} /><p>Un espace vide, plein de possibles.</p><button onClick={() => setStudio(true)}>Ajouter un widget <PlusIcon /></button></div>}
+    <div className="desk-caption"><span><Check size={12} /> Enregistré dans ce navigateur</span><span>Un peu moins de bruit. Un peu plus de toi.</span></div></div>
+    <footer className="bottom-bar"><div className="dock" aria-label="Commandes de l’espace"><button className="dock-audio" onClick={() => setPanel('audio')} aria-label="Ouvrir les ambiances">{audio.playing ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>Ambiances<small>{audio.playing ? 'Le calme s’écoute' : 'Un fond de douceur'}</small></span>{audio.playing && <span className="sound-bars" aria-hidden="true"><i /><i /><i /></span>}</button><span className="dock-divider" /><button className="icon-button" aria-label="Capturer une pensée" title="Pensée · N" onClick={() => setPanel('thoughts')}><Lightbulb size={20} />{state.privateData.thoughts.length > 0 && <span className="notification-dot" />}</button><button className="icon-button" aria-label={focus ? 'Quitter le mode Focus' : 'Activer le mode Focus'} aria-pressed={focus} title="Focus · F" onClick={toggleFocus}>{focus ? <Minimize2 size={19} /> : <Maximize2 size={19} />}</button><button className="icon-button fullscreen-button" aria-label={fullscreen ? 'Quitter le plein écran' : 'Plein écran'} onClick={() => { const operation = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); if (operation) void operation.catch(() => reportError(new Error('Le plein écran n’est pas disponible dans ce navigateur.'))) }}><Expand size={18} /></button><button className="icon-button" aria-label="Préférences" onClick={() => setPanel('preferences')}><Settings2 size={19} /></button></div><div className="footer-note"><Leaf size={12} /> Libre, local, et juste pour toi.</div></footer>
+    {studio && <Studio workspace={workspace} selected={selected} onSelect={setSelected} onClose={() => setStudio(false)} />}
+    {focus && <button className="focus-exit" onClick={toggleFocus}><PanelRight size={15} /> Retrouver l’espace</button>}
+    {panel === 'workspaces' && <WorkspaceDialog state={state} onClose={close} />}{panel === 'timer' && <TimerSettings profile={workspace.timerProfile} onClose={close} />}{panel === 'thoughts' && <ThoughtDialog state={state} onClose={close} />}{panel === 'preferences' && <PreferencesDialog state={state} onClose={close} onData={() => setPanel('data')} />}{panel === 'data' && <DataPanel onClose={close} />}{panel === 'audio' && <Dialog title="Le son de ton petit coin" onClose={close}><AudioPanel workspace={workspace} audio={audio} /></Dialog>}
   </main>
 }
+function PlusIcon() { return <ArrowUpRight size={16} /> }
