@@ -6,7 +6,7 @@ Un petit coin de calme, libre et personnalisable. Choisis une ambiance, pose une
 
 ![Komolu, ambiance Minimal](docs/screenshots/minimal.png)
 
-**V1.0.0** · [Code source](https://github.com/raphplt/Komolu) · [Installation Docker](docs/self-hosting.md) · [Contribuer](CONTRIBUTING.md)
+**V1.0.0** · [Télécharger la release](https://github.com/raphplt/Komolu/releases/latest) · [Code source](https://github.com/raphplt/Komolu) · [Installation Docker](docs/self-hosting.md) · [Contribuer](CONTRIBUTING.md)
 
 **[Ouvrir Komolu](https://raphplt.github.io/Komolu/)** — instance publique publiée le 13 octobre 2026 via GitHub Pages.
 
