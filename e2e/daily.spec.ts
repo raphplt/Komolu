@@ -7,20 +7,18 @@ test('custom sequence skips safely and running profile stays unchanged until res
   await page.getByRole('textbox', { name: 'Nouvelle tâche' }).fill('Rester maître de ma tâche')
   await page.getByRole('button', { name: 'Ajouter la tâche', exact: true }).click()
   await page.getByRole('button', { name: 'Régler la minuterie' }).click()
-  const settings = page.getByRole('dialog', { name: 'Ton rythme', exact: true })
+  const settings = page.getByRole('dialog', { name: 'Profil de minuterie', exact: true })
   await settings.getByRole('spinbutton', { name: 'Minutes de la phase 1' }).fill('1')
   await settings.getByRole('spinbutton', { name: 'Minutes de la phase 2' }).fill('1')
   await settings.getByRole('spinbutton', { name: /Répétitions/ }).fill('1')
   await expect(
     settings.getByRole('checkbox', { name: 'Enchaîner les phases automatiquement' }),
   ).not.toBeChecked()
-  await settings.getByRole('button', { name: 'Enregistrer ce rythme' }).click()
+  await settings.getByRole('button', { name: 'Enregistrer le profil' }).click()
   await expect(page.getByRole('timer')).toHaveText('01:00')
   await page.getByRole('button', { name: 'Démarrer', exact: true }).click()
   await page.getByRole('button', { name: 'Passer à la phase suivante' }).click()
-  await expect(page.getByRole('article', { name: 'Minuterie', exact: true })).toContainText(
-    'Petite pause',
-  )
+  await expect(page.getByRole('article', { name: 'Minuterie', exact: true })).toContainText('Pause')
   await page.getByRole('button', { name: 'Passer à la phase suivante' }).click()
   await expect(page.getByRole('article', { name: 'Minuterie', exact: true })).toContainText(
     'Session terminée',
@@ -31,7 +29,7 @@ test('custom sequence skips safely and running profile stays unchanged until res
   await page.getByRole('button', { name: 'Démarrer', exact: true }).click()
   await page.getByRole('button', { name: 'Régler la minuterie' }).click()
   await settings.getByRole('button', { name: '50 / 10', exact: true }).click()
-  await settings.getByRole('button', { name: 'Enregistrer ce rythme' }).click()
+  await settings.getByRole('button', { name: 'Enregistrer le profil' }).click()
   await expect(page.getByRole('timer')).toHaveText(/^0[01]:\d{2}$/)
   await page.getByRole('button', { name: 'Réinitialiser la session' }).click()
   await expect(page.getByRole('timer')).toHaveText('50:00')

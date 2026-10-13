@@ -188,18 +188,6 @@ hr {
   place-items: center;
   transform: rotate(-12deg);
 }
-.brand-tagline {
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 8px;
-  letter-spacing: 1.3px;
-  border-left: 1px solid var(--border);
-  padding-left: 17px;
-  margin-left: 10px;
-  max-width: 140px;
-  line-height: 1.65;
-  font-weight: 500;
-  color: var(--muted);
-}
 .header-actions {
   display: flex;
   gap: 15px;
@@ -232,52 +220,6 @@ hr {
   max-width: 1220px;
   margin: 0 auto;
 }
-.welcome {
-  position: relative;
-  margin: 46px 0 40px;
-  text-align: center;
-}
-.welcome-kicker {
-  font-size: 9px;
-  letter-spacing: 2.3px;
-  font-weight: 500;
-  color: var(--muted);
-  margin-bottom: 19px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-}
-.welcome-kicker > span {
-  width: 5px;
-  height: 5px;
-  background: var(--accent);
-  border-radius: 50%;
-}
-.welcome h1 {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(32px, 3.3vw, 49px);
-  font-weight: 400;
-  letter-spacing: -1.8px;
-  line-height: 1.15;
-  margin-bottom: 16px;
-}
-.welcome p {
-  font-size: 12px;
-  color: var(--muted);
-}
-.welcome-doodle {
-  position: absolute;
-  font-size: 46px;
-  right: 8%;
-  top: 25px;
-  color: var(--accent);
-  transform: rotate(15deg);
-  opacity: 0.6;
-}
-.mobile-break {
-  display: none;
-}
 .widget-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -299,6 +241,7 @@ hr {
   overflow: hidden;
 }
 .widget-clock {
+  container-type: inline-size;
   background: rgba(var(--card), calc(var(--widget-opacity, 1) * 0.62));
   box-shadow: none;
 }
@@ -723,13 +666,6 @@ hr {
 .dock .icon-button {
   position: relative;
 }
-.footer-note {
-  font-size: 8px;
-  color: var(--muted);
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
 .notification-dot {
   position: absolute;
   width: 5px;
@@ -1019,9 +955,6 @@ kbd {
   margin-right: 320px;
   max-width: none;
 }
-.studio-open .welcome h1 {
-  font-size: 35px;
-}
 .studio-open .widget-grid {
   gap: 11px;
   grid-auto-rows: 65px;
@@ -1039,19 +972,6 @@ kbd {
 }
 .studio-open .tasks-content h2 {
   font-size: 18px;
-}
-.studio-open .welcome {
-  margin-top: 25px;
-  margin-bottom: 22px;
-}
-.studio-hint {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 7px;
-  font-size: 10px;
-  color: var(--muted);
-  margin: 18px 0;
 }
 .segmented {
   display: flex;
@@ -1112,7 +1032,7 @@ kbd {
   min-height: 28px;
 }
 .widget.editable {
-  overflow: visible;
+  overflow: hidden;
   outline: 1px dashed var(--accent);
   outline-offset: 3px;
 }
@@ -1167,6 +1087,7 @@ kbd {
   position: relative;
   width: 115px;
   height: 115px;
+  flex-shrink: 0;
   border: 1px solid var(--border);
   border-radius: 50%;
   margin: 0 auto 13px;
@@ -1206,7 +1127,7 @@ kbd {
   background: var(--ink);
 }
 .focus-mode .app-header,
-.focus-mode .welcome,
+.focus-mode .workspace-heading,
 .focus-mode .desk-caption {
   display: none;
 }
@@ -1216,14 +1137,6 @@ kbd {
 .focus-mode .widget-grid {
   max-width: 1220px;
   margin: auto;
-}
-.focus-exit {
-  position: fixed;
-  top: 25px;
-  right: 30px;
-  background: rgba(var(--card), 0.9);
-  font-size: 11px;
-  z-index: 20;
 }
 .empty-canvas {
   text-align: center;
@@ -1241,9 +1154,6 @@ kbd {
   scroll-behavior: auto !important;
 }
 @media (min-width: 1450px) {
-  .welcome {
-    margin: 65px 0 50px;
-  }
   .widget-grid {
     grid-auto-rows: 65px;
   }
@@ -1256,9 +1166,6 @@ kbd {
   .app {
     padding-left: 3vw;
     padding-right: 3vw;
-  }
-  .brand-tagline {
-    display: none;
   }
   .widget-grid {
     gap: 13px;
@@ -1279,9 +1186,6 @@ kbd {
   }
   .studio-panel {
     box-shadow: 0 12px 100px #182c2670;
-  }
-  .welcome-doodle {
-    right: 3%;
   }
   .clock-time {
     font-size: 37px;
@@ -1315,28 +1219,6 @@ kbd {
   }
   .studio-button svg {
     width: 13px;
-  }
-  .welcome {
-    margin: 32px 0 32px;
-  }
-  .welcome h1 {
-    font-size: 37px;
-    letter-spacing: -1.4px;
-    line-height: 1.15;
-  }
-  .welcome p {
-    font-size: 11px;
-  }
-  .welcome-kicker {
-    font-size: 8px;
-    letter-spacing: 1.8px;
-    margin-bottom: 16px;
-  }
-  .welcome-doodle {
-    display: none;
-  }
-  .mobile-break {
-    display: block;
   }
   .widget-grid,
   .studio-open .widget-grid {
@@ -1409,9 +1291,6 @@ kbd {
     justify-content: center;
     margin-top: 20px;
   }
-  .desk-caption span:last-child {
-    display: none;
-  }
   .bottom-bar {
     bottom: 15px;
     width: 100%;
@@ -1439,18 +1318,12 @@ kbd {
   .fullscreen-button {
     display: none;
   }
-  .footer-note {
-    font-size: 7px;
-  }
   .studio-panel {
     top: 80px;
     right: 12px;
     bottom: 100px;
     width: min(320px, calc(100vw - 24px));
     padding: 20px;
-  }
-  .studio-open .welcome {
-    margin-top: 20px;
   }
   .studio-open .timer-face {
     min-height: 220px;
@@ -1472,10 +1345,6 @@ kbd {
   }
   .focus-mode .workspace-body {
     padding-top: 85px;
-  }
-  .focus-exit {
-    top: 20px;
-    right: 20px;
   }
   .dialog {
     padding: 22px;
@@ -1506,12 +1375,6 @@ kbd {
     font-size: 11px;
     padding: 12px;
     gap: 8px;
-  }
-  .scene-cozy .welcome,
-  .scene-deep .welcome {
-    background: rgba(var(--card), 0.75);
-    padding: 22px 12px;
-    border-radius: 18px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1546,8 +1409,7 @@ kbd {
 .clock-instances button {
   font-size: 10px;
 }
-.scene-cozy .app-header,
-.scene-cozy .welcome {
+.scene-cozy .app-header {
   color: #283d31;
   --muted: #3e5140;
   --accent: #475e40;
@@ -1562,18 +1424,6 @@ kbd {
   background: #eff0d9;
   color: #334b3b;
 }
-.scene-cozy .welcome {
-  background: #f4eacbdc;
-  border: 1px solid #f5ebd270;
-  border-radius: 18px;
-  padding: 25px 18px;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 650px;
-}
-.scene-cozy .welcome-doodle {
-  display: none;
-}
 .scene-cozy .desk-caption,
 .scene-deep .desk-caption {
   color: #f1efe5;
@@ -1583,14 +1433,113 @@ kbd {
   width: fit-content;
   gap: 25px;
 }
-.scene-cozy .footer-note,
-.scene-deep .footer-note {
-  color: #f7f1e4;
-  background: rgba(30, 34, 38, 0.85);
-  padding: 4px 9px;
-  border-radius: 20px;
-}
 .scene-cozy .dialog .primary,
 .scene-deep .dialog .primary {
   color: #fffef7;
+}
+
+.workspace-heading {
+  margin: 26px 0 24px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(var(--card), 0.86);
+}
+.workspace-heading h1 {
+  margin: 0;
+  font:
+    400 24px Georgia,
+    'Times New Roman',
+    serif;
+  overflow-wrap: anywhere;
+}
+.workspace-heading p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.focus-toolbar {
+  position: fixed;
+  z-index: 20;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px;
+  background: rgba(var(--card), 0.96);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+.focus-toolbar button {
+  border: 0;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.focus-time {
+  font-variant-numeric: tabular-nums;
+  min-width: 45px;
+}
+.focus-leave {
+  gap: 6px;
+}
+.clock-shadow-soft .clock-time {
+  text-shadow: 0 2px 8px #0003;
+}
+.clock-shadow-strong .clock-time {
+  text-shadow:
+    0 2px 4px #0008,
+    0 5px 16px #0005;
+}
+.clock-shadow-soft .analog-clock {
+  box-shadow: 0 2px 8px #0003;
+}
+.clock-shadow-strong .analog-clock {
+  box-shadow: 0 3px 12px #0007;
+}
+.clock-content .analog-clock {
+  color: inherit;
+}
+.clock-content input[type='color'] {
+  width: 100%;
+}
+.widget-audio.editable {
+  padding-top: 35px;
+  overflow: auto;
+}
+@media (max-width: 760px) {
+  .workspace-heading {
+    margin: 8px 0 20px;
+  }
+  .workspace-heading h1 {
+    font-size: 22px;
+  }
+  .focus-toolbar {
+    max-width: calc(100vw - 24px);
+    bottom: 16px;
+    gap: 2px;
+  }
+  .focus-toolbar button {
+    padding: 9px;
+  }
+  .focus-toolbar .dock-divider {
+    margin: 0 2px;
+  }
+}
+
+.widget-clock .clock-time {
+  font-size: min(52px, 25cqw);
+}
+.widget-clock .clock-small .clock-time {
+  font-size: min(36px, 21cqw);
+}
+.workspace-details textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 70px;
 }

@@ -11,6 +11,21 @@
   position: absolute;
   inset: 0;
 }
+.generated-background {
+  position: absolute;
+  inset: 0;
+}
+.gradient-fields {
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.gradient-fields legend {
+  padding: 0 5px;
+  font-size: 12px;
+}
 .background-tint {
   opacity: 0.09;
 }

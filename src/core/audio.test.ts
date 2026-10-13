@@ -2,12 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   AmbientAudio,
   AUDIO_RESUME_TIMEOUT_MS,
+  AUDIO_LOAD_TIMEOUT_MS,
   armCompletionSound,
   completionSoundIsArmed,
   generateSound,
   playCompletionSound,
 } from './audio'
-import type { AudioProfile, SoundId } from './model'
+import type { AudioProfile } from './model'
 const { getMedia } = vi.hoisted(() => ({ getMedia: vi.fn() }))
 vi.mock('./storage', () => ({ db: { media: { get: getMedia } } }))
 class Parameter {
@@ -98,15 +99,32 @@ beforeEach(() => {
   Context.instances = []
   Context.resumeImplementation = undefined
   vi.stubGlobal('AudioContext', Context)
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(16) })),
+  )
+  vi.stubGlobal(
+    'OfflineAudioContext',
+    class {
+      decodeAudioData = vi.fn(async () =>
+        Object.assign(new Buffer(), {
+          length: 640_000,
+          numberOfChannels: 2,
+          duration: 20,
+          sampleRate: 32_000,
+        }),
+      )
+    },
+  )
   getMedia.mockReset()
 })
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
 })
-describe('original ambient textures', () => {
-  it('produces finite bounded audio with silent seams and distinct textures', () => {
-    const outputs = (['brown', 'rain', 'wind', 'fire', 'waves'] as SoundId[]).map((kind) => {
+describe('original noise generators', () => {
+  it('produces distinct finite bounded white and brown noise without a silent seam', () => {
+    const outputs = (['brown', 'white'] as const).map((kind) => {
       let seed = 7
       const random = () => {
         seed = (seed * 16807) % 2147483647
@@ -114,14 +132,13 @@ describe('original ambient textures', () => {
       }
       const samples = generateSound(kind, 8000, 2, random)
       expect(samples).toHaveLength(16000)
-      expect(Math.abs(samples[0])).toBe(0)
-      expect(Math.abs(samples.at(-1)!)).toBe(0)
+      expect(samples.slice(0, 80).some((sample) => Math.abs(sample) > 0.01)).toBe(true)
       expect(samples.every((sample) => Number.isFinite(sample) && Math.abs(sample) <= 0.801)).toBe(
         true,
       )
       return samples.reduce((sum, sample) => sum + sample * sample, 0)
     })
-    expect(new Set(outputs).size).toBe(5)
+    expect(new Set(outputs).size).toBe(2)
     expect(outputs.every((energy) => energy > 0.01)).toBe(true)
   })
 })
@@ -346,5 +363,131 @@ describe('unavailable audio output', () => {
     await chimeRejected
     expect(completionSoundIsArmed()).toBe(false)
     expect(Context.instances[1].close).toHaveBeenCalledOnce()
+  })
+})
+
+describe('recorded catalogue playback', () => {
+  it('plays all nine native sources, including the ninth, from same-origin URLs', async () => {
+    const { SOUND_CATALOG } = await import('./sounds')
+    const engine = new AmbientAudio()
+    await engine.play({
+      master: 0.3,
+      muted: false,
+      tracks: SOUND_CATALOG.map((sound) => ({
+        id: sound.id,
+        source: sound.id,
+        name: sound.name,
+        volume: sound.volume,
+        enabled: true,
+      })),
+    })
+    expect(Context.instances[0].sources).toHaveLength(9)
+    expect(fetch).toHaveBeenCalledTimes(7)
+    expect(vi.mocked(fetch).mock.calls.every(([url]) => String(url).startsWith('/audio/'))).toBe(
+      true,
+    )
+    await engine.dispose()
+  })
+  it('reports failed downloads and allows a subsequent explicit retry', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: false } as Response)
+    const engine = new AmbientAudio()
+    await expect(engine.play(profile())).rejects.toThrow('enregistrement indisponible')
+    expect(Context.instances[0].sources).toHaveLength(1)
+    await engine.play(profile())
+    expect(Context.instances[0].sources).toHaveLength(2)
+    await engine.dispose()
+  })
+  it('bounds a stalled fetch and does not play its late result', async () => {
+    let resolve!: (response: Response) => void
+    vi.mocked(fetch).mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done
+        }),
+    )
+    const engine = new AmbientAudio(),
+      playing = engine.play(profile())
+    const rejected = expect(playing).rejects.toThrow(/chargement/)
+    await vi.advanceTimersByTimeAsync(AUDIO_LOAD_TIMEOUT_MS)
+    await rejected
+    resolve({ ok: true, arrayBuffer: async () => new ArrayBuffer(16) } as Response)
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(Context.instances[0].sources).toHaveLength(1)
+    await engine.dispose()
+  })
+  it('cancels an in-flight recording immediately on stop, with no stale source', async () => {
+    vi.mocked(fetch).mockImplementationOnce(() => new Promise(() => undefined))
+    const engine = new AmbientAudio(),
+      playing = engine.play(profile())
+    await vi.advanceTimersByTimeAsync(1)
+    const stopping = engine.stop()
+    await vi.advanceTimersByTimeAsync(300)
+    await stopping
+    await playing
+    expect(engine.playing).toBe(false)
+    expect(Context.instances[0].sources).toHaveLength(1)
+    expect(Context.instances[0].sources[0].stop).toHaveBeenCalled()
+    await engine.dispose()
+  })
+  it('rejects excess decoded memory explicitly before fetching another recording', async () => {
+    const engine = new AmbientAudio()
+    const mix = profile()
+    mix.tracks = Array.from({ length: 15 }, (_, i) => ({
+      id: `rain-${i}`,
+      source: 'rain',
+      name: 'Pluie',
+      volume: 0.1,
+      enabled: true,
+    }))
+    await expect(engine.play(mix)).rejects.toThrow('64 Mio maximum')
+    expect(Context.instances[0].sources).toHaveLength(13)
+    expect(fetch).toHaveBeenCalledTimes(13)
+    await engine.dispose()
+  })
+})
+
+describe('non-cancelable decoder reservations', () => {
+  it('keeps timed-out decoders inside the memory budget until they really settle', async () => {
+    const pending: ((buffer: Buffer) => void)[] = []
+    vi.stubGlobal(
+      'OfflineAudioContext',
+      class {
+        decodeAudioData = vi.fn(() => new Promise<Buffer>((resolve) => pending.push(resolve)))
+      },
+    )
+    const engine = new AmbientAudio(),
+      mix = profile()
+    mix.tracks = mix.tracks.filter((track) => track.source === 'rain')
+    for (let i = 0; i < 13; i++) {
+      const request = engine.play(mix)
+      const rejected = expect(request).rejects.toThrow('chargement trop long')
+      await vi.advanceTimersByTimeAsync(AUDIO_LOAD_TIMEOUT_MS)
+      await rejected
+    }
+    expect(pending).toHaveLength(13)
+    await expect(engine.play(mix)).rejects.toThrow('64 Mio maximum')
+    expect(pending).toHaveLength(13)
+    const decoded = () =>
+      Object.assign(new Buffer(), {
+        length: 640_000,
+        numberOfChannels: 2,
+        duration: 20,
+        sampleRate: 32_000,
+      })
+    pending[0](decoded())
+    await vi.advanceTimersByTimeAsync(1)
+    expect(Context.instances[0].sources).toHaveLength(0)
+    const retry = engine.play(mix)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(pending).toHaveLength(14)
+    pending[13](decoded())
+    await retry
+    expect(Context.instances[0].sources).toHaveLength(1)
+    await engine.dispose()
+    for (let i = 1; i < 13; i++) pending[i](decoded())
+    await vi.advanceTimersByTimeAsync(1)
+    expect(engine.playing).toBe(false)
+    expect(Context.instances[0].sources).toHaveLength(1)
   })
 })

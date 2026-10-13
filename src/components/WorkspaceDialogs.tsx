@@ -7,10 +7,11 @@ import { act } from '../core/ui'
 export function WorkspaceDialog({ state, onClose }: { state: AppState; onClose: () => void }) {
   const workspace = activeWorkspace(state)
   const [name, setName] = useState(workspace.name)
+  const [description, setDescription] = useState(workspace.description)
   const [confirm, setConfirm] = useState<'delete' | 'restore' | null>(null)
   return (
-    <Dialog title="Tes petits coins" onClose={onClose}>
-      <p className="muted">Change de décor. Tes tâches et tes idées restent avec toi.</p>
+    <Dialog title="Espaces" onClose={onClose}>
+      <p className="muted">Les tâches, notes et pensées sont communes à tous les espaces.</p>
       <div className="workspace-list">
         {state.workspaces.map((w) => (
           <button
@@ -29,15 +30,19 @@ export function WorkspaceDialog({ state, onClose }: { state: AppState; onClose: 
               )}
             </span>
             <strong>{w.name}</strong>
-            <small>{w.description}</small>
+            {w.description && <small>{w.description}</small>}
             {w.id === workspace.id && <Check size={17} />}
           </button>
         ))}
       </div>
-      <h3>Composer un nouvel espace</h3>
+      <h3>Créer un espace</h3>
       <div className="profile-options">
         {(['minimal', 'cozy', 'deep'] as Scene[]).map((scene) => (
-          <button key={scene} onClick={() => act(actions.createWorkspace(scene).then(onClose))}>
+          <button
+            key={scene}
+            aria-label={`Créer un espace ${scene === 'minimal' ? 'Minimal' : scene === 'cozy' ? 'Cozy' : 'Deep Work'}`}
+            onClick={() => act(actions.createWorkspace(scene).then(onClose))}
+          >
             <Plus size={15} />
             {scene === 'minimal' ? 'Minimal' : scene === 'cozy' ? 'Cozy' : 'Deep Work'}
           </button>
@@ -46,25 +51,39 @@ export function WorkspaceDialog({ state, onClose }: { state: AppState; onClose: 
       <hr />
       <h3>Gérer « {workspace.name} »</h3>
       <form
-        className="inline-form"
+        className="workspace-details"
         onSubmit={(e) => {
           e.preventDefault()
           act(
             actions
               .workspace((w) => {
                 w.name = name.trim().slice(0, 80)
+                w.description = description.trim()
               })
               .then(onClose),
           )
         }}
       >
-        <input
-          aria-label="Nom de l’espace"
-          value={name}
-          maxLength={80}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <button disabled={!name.trim()}>Renommer</button>
+        <label className="field">
+          Nom
+          <input
+            aria-label="Nom de l’espace"
+            value={name}
+            maxLength={80}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+        <label className="field">
+          Description (facultative)
+          <textarea
+            aria-label="Description de l’espace"
+            value={description}
+            maxLength={2000}
+            rows={2}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </label>
+        <button disabled={!name.trim()}>Enregistrer l’espace</button>
       </form>
       <div className="row wrap">
         <button onClick={() => act(actions.duplicateWorkspace().then(onClose))}>
@@ -113,8 +132,7 @@ export function ThoughtDialog({ state, onClose }: { state: AppState; onClose: ()
   const [copied, setCopied] = useState<string | null>(null)
   const [error, setError] = useState('')
   return (
-    <Dialog title="Laisse passer une pensée" onClose={onClose}>
-      <p className="muted">Pose-la ici, retrouve-la plus tard. Ton fil t’attend.</p>
+    <Dialog title="Pensées" onClose={onClose}>
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -131,15 +149,15 @@ export function ThoughtDialog({ state, onClose }: { state: AppState; onClose: ()
           onChange={(e) => setText(e.target.value)}
         />
         <button className="primary full" disabled={!text.trim()}>
-          Déposer et revenir au calme <ArrowRight size={16} />
+          Enregistrer et fermer <ArrowRight size={16} />
         </button>
       </form>
       {error && <p role="alert">{error}</p>}
       <h3>
-        Pensées de passage <span className="count">{state.privateData.thoughts.length}</span>
+        Pensées enregistrées <span className="count">{state.privateData.thoughts.length}</span>
       </h3>
       {state.privateData.thoughts.length === 0 && (
-        <p className="muted">Rien à retenir pour le moment.</p>
+        <p className="muted">Aucune pensée enregistrée.</p>
       )}
       <ul className="thought-list">
         {state.privateData.thoughts.map((thought) => (
@@ -192,7 +210,7 @@ export function PreferencesDialog({
   onData: () => void
 }) {
   return (
-    <Dialog title="Quelques préférences" onClose={onClose}>
+    <Dialog title="Préférences" onClose={onClose}>
       <label className="check-field">
         <input
           type="checkbox"
@@ -235,7 +253,7 @@ export function PreferencesDialog({
           <dt>
             <kbd>N</kbd>
           </dt>
-          <dd>Déposer une pensée</dd>
+          <dd>Capturer une pensée</dd>
         </div>
         <div>
           <dt>

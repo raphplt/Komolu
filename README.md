@@ -1,26 +1,26 @@
 # Komolu
 
-**Ton espace. Ton rythme. Ta concentration.**
-
-Un petit coin de calme, libre et personnalisable. Choisis une ambiance, pose une tâche et lance une session. Sans compte, sans publicité, sans serveur de données.
+Un espace de concentration personnalisable : minuterie, tâches, notes, décors et ambiances. Libre, local et sans compte.
 
 ![Komolu, ambiance Minimal](docs/screenshots/minimal.png)
 
-**V1.0.0** · [Télécharger la release](https://github.com/raphplt/Komolu/releases/latest) · [Code source](https://github.com/raphplt/Komolu) · [Installation Docker](docs/self-hosting.md) · [Contribuer](CONTRIBUTING.md)
+**1.1.0-rc.1 — reprise de la V1, en validation** · [Télécharger la candidate](https://github.com/raphplt/Komolu/releases/tag/v1.1.0-rc.1) · [Code source](https://github.com/raphplt/Komolu) · [Installation Docker](docs/self-hosting.md) · [Contribuer](CONTRIBUTING.md)
 
-**[Ouvrir Komolu](https://raphplt.github.io/Komolu/)** — instance publique publiée le 13 octobre 2026 via GitHub Pages.
+**[Ouvrir Komolu](https://raphplt.github.io/Komolu/)** — instance publique via GitHub Pages.
+
+La livraison `1.0.0` couvrait les principaux modules, mais pas toute la profondeur ni les critères de sortie de la fiche V1. Cette candidate apporte les corrections détaillées dans l’audit ; elle ne clôt pas tous les critères V1. La bêta humaine demandée en J7 reste à réaliser. [Audit détaillé](docs/v1-audit.md) · [Plan de reprise](docs/v1-completion-plan.md).
 
 ## Un espace prêt à utiliser
 
 - Trois décors originaux : **Minimal**, **Cozy** et **Deep Work**. Crée, duplique et renomme tes propres espaces.
-- **Studio** : déplace, redimensionne et masque les widgets à la souris ou au clavier ; règle l'horloge et compose ton fond avec une image ou une vidéo locale.
+- **Studio** : déplace, redimensionne et masque les widgets à la souris ou au clavier, avec résolution des chevauchements. Choisis un décor intégré, un fond uni, un dégradé ou un média local ; règle la palette indépendamment, le voile et l’horloge (format, fuseau, couleur, ombre).
 - **Minuterie** : 25/5, 50/10, durée libre ou séquence personnalisée ; pause, reprise, répétitions et son de fin facultatif. La session survit au rechargement.
 - **Tâches, notes et pensées** : données personnelles communes à tous les espaces, sauvegardées dans ce navigateur.
-- **Ambiances** : cinq textures synthétiques originales — bruit brun, pluie, vent, feu et vagues — avec mixeur, volumes et sons personnels. Ce ne sont pas des enregistrements de nature.
-- **Focus**, plein écran, mouvements réduits et raccourcis désactivables.
+- **Ambiances** : pluie, tonnerre, vent, feu, forêt, café et vagues enregistrés, avec bruit blanc/brun synthétiques. Mixeur, volumes, mixes propres à chaque espace et sons personnels. Les fichiers redistribuables et leurs attributions accompagnent l’application.
+- **Focus** mémorisé par espace, commandes compactes, plein écran, mouvements réduits et raccourcis désactivables. L’interface privilégie les libellés utiles.
 - **Sauvegarde complète** et **partage d'espace** : deux exports distincts ; un espace partagé n'emporte ni tâches, ni notes, ni pensées, ni médias personnels.
 
-[Cozy](docs/screenshots/cozy.png) · [Deep Work](docs/screenshots/deep.png) · [Studio](docs/screenshots/studio.png) · [Mobile](docs/screenshots/mobile.png)
+[Cozy](docs/screenshots/cozy.png) · [Deep Work](docs/screenshots/deep.png) · [Studio](docs/screenshots/studio.png) · [Focus](docs/screenshots/focus.png) · [Mobile](docs/screenshots/mobile.png)
 
 ## Démarrer en développement
 
@@ -67,7 +67,9 @@ Raccourcis hors champ de saisie : **Espace** démarre/met en pause, **N** captur
 
 ## Périmètre et suite
 
-Cette V1 est une application statique en français. PWA et installation hors ligne, synchronisation entre appareils, salles de coworking, chat, voix et configuration de marque à l'exécution sont reportés. Aucun backend n'est anticipé. Les tests automatisés ne remplacent pas une bêta humaine ; Safari/iOS et l'écoute réelle des ambiances restent à valider.
+Cette candidate est une application statique en français. Les imports et le stockage passent au schéma 2 avec migration des données 1.0.0 ; exporte une sauvegarde avant de mettre à jour une installation existante. PWA et installation hors ligne, synchronisation entre appareils, salles de coworking, chat, voix et configuration de marque à l'exécution sont reportés. Aucun backend n'est anticipé. Les tests automatisés ne remplacent pas une bêta humaine ; Safari/iOS, les lecteurs d’écran et l’écoute réelle des ambiances restent à valider.
+
+Le poster vidéo dédié, la centralisation complète du registre de widgets et des points de documentation/gouvernance restent également ouverts : ADR individuels, backlog d’issues, démo vidéo et protection de branche. L’[audit](docs/v1-audit.md) conserve la matrice des écarts. Les résultats techniques vérifiés et leurs limites figurent dans [Vérification](docs/testing.md).
 
 [Architecture](docs/architecture.md) · [Plan de livraison](IMPLEMENTATION_PLAN.md) · [Changelog](CHANGELOG.md) · [Fiche de vision originale](docs/product.md)
 

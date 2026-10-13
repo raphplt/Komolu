@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from 'dexie'
 import type { AppState, MediaRecord, StateRecord } from './model'
 import { createInitialState } from './presets'
 import { assertStateLimits } from './limits'
+import { migrateState } from './migrations'
 
 export class KomoluDatabase extends Dexie {
   state!: EntityTable<StateRecord, 'id'>
@@ -9,6 +10,13 @@ export class KomoluDatabase extends Dexie {
   constructor(name = 'komolu') {
     super(name)
     this.version(1).stores({ state: 'id', media: 'id, kind, createdAt' })
+    this.version(2)
+      .stores({ state: 'id', media: 'id, kind, createdAt' })
+      .upgrade(async (transaction) => {
+        const state = transaction.table('state')
+        const record = (await state.get('app')) as { id: 'app'; data: unknown } | undefined
+        if (record) await state.put({ id: 'app', data: migrateState(record.data) })
+      })
   }
 }
 export const db = new KomoluDatabase()

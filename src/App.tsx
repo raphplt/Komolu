@@ -8,14 +8,17 @@ import {
   Lightbulb,
   Maximize2,
   Minimize2,
-  PanelRight,
+  Pause,
+  Play,
+  PanelsTopLeft,
   Settings2,
   SlidersHorizontal,
   Volume2,
   VolumeX,
 } from 'lucide-react'
 import type { AppState } from './core/model'
-import { actions, activeWorkspace, reportError, useAppState } from './core/store'
+import { actions, activeWorkspace, reportError, useAppState, useNow } from './core/store'
+import { formatDuration, timerValue } from './core/timer'
 import { armCompletionSound } from './core/audio'
 import { useAudio, useCompletionSound } from './hooks/useAudio'
 import { Background } from './components/Background'
@@ -35,7 +38,7 @@ export default function App() {
     return (
       <main className="loading">
         <Leaf size={32} />
-        <h1>Ton petit coin se prépare…</h1>
+        <h1>Chargement de Komolu…</h1>
         {error && <p role="alert">{error}</p>}
       </main>
     )
@@ -60,17 +63,18 @@ function Experience({
   const [systemMotion, setSystemMotion] = useState(
     () => matchMedia('(prefers-reduced-motion: reduce)').matches,
   )
-  const focus = state.preferences.focusMode
+  const focus = workspace.focusMode
   const reducedMotion = systemMotion || state.preferences.reducedMotion
   const toggleTimer = () => {
-    if (state.timer.status !== 'running') void armCompletionSound().catch(reportError)
+    if (state.timer.status !== 'running' && state.timer.profile.sound)
+      void armCompletionSound().catch(reportError)
     act(actions.timer(state.timer.status === 'running' ? 'pause' : 'start'))
   }
   const toggleFocus = () => {
     setStudio(false)
     act(
-      actions.update((s) => {
-        s.preferences.focusMode = !s.preferences.focusMode
+      actions.workspace((space) => {
+        space.focusMode = !space.focusMode
       }),
     )
   }
@@ -122,7 +126,7 @@ function Experience({
   const close = () => setPanel(null)
   return (
     <main
-      className={`app scene-${workspace.background.scene} ${focus ? 'focus-mode' : ''} ${studio ? 'studio-open' : ''} ${reducedMotion ? 'reduced-motion' : ''}`}
+      className={`app scene-${workspace.palette} ${focus ? 'focus-mode' : ''} ${studio ? 'studio-open' : ''} ${reducedMotion ? 'reduced-motion' : ''}`}
     >
       <Background workspace={workspace} reducedMotion={reducedMotion}>
         <Scene scene={workspace.background.scene} />
@@ -136,8 +140,8 @@ function Experience({
             e.preventDefault()
             setStudio(false)
             act(
-              actions.update((s) => {
-                s.preferences.focusMode = false
+              actions.workspace((space) => {
+                space.focusMode = false
               }),
             )
           }}
@@ -145,7 +149,7 @@ function Experience({
           <span className="brand-mark">
             <Leaf size={23} strokeWidth={1.5} />
           </span>
-          komolu<span className="brand-tagline">TON PETIT COIN DE CALME</span>
+          komolu
         </a>
         <div className="header-actions">
           <button className="workspace-switch" onClick={() => setPanel('workspaces')}>
@@ -160,8 +164,8 @@ function Experience({
               setStudio(!studio)
               if (focus)
                 act(
-                  actions.update((s) => {
-                    s.preferences.focusMode = false
+                  actions.workspace((space) => {
+                    space.focusMode = false
                   }),
                 )
             }}
@@ -177,32 +181,10 @@ function Experience({
         </div>
       )}
       <div className="workspace-body">
-        <section className="welcome">
-          <div className="welcome-kicker">
-            <span /> TON ESPACE. TON RYTHME.
-          </div>
-          <h1>
-            {workspace.background.scene === 'cozy' ? (
-              'Un refuge pour tes idées.'
-            ) : workspace.background.scene === 'deep' ? (
-              'Le calme. Et rien d’autre.'
-            ) : (
-              <>
-                Fais de la place
-                <br className="mobile-break" /> à l’essentiel.
-              </>
-            )}
-          </h1>
-          <p>{workspace.description} Une chose à la fois.</p>
-          <div className="welcome-doodle" aria-hidden="true">
-            ✳
-          </div>
+        <section className="workspace-heading">
+          <h1>{workspace.name}</h1>
+          {workspace.description && <p>{workspace.description}</p>}
         </section>
-        {studio && (
-          <p className="studio-hint">
-            <SlidersHorizontal size={14} /> Tout est à sa place. Ou presque : à toi de composer.
-          </p>
-        )}
         <section className="widget-grid" aria-label="Mon espace de concentration">
           {workspace.widgets
             .filter((w) => w.visible)
@@ -227,7 +209,12 @@ function Experience({
                 ) : widget.type === 'notes' ? (
                   <NotesWidget notes={state.privateData.notes} dataEpoch={state.dataEpoch} />
                 ) : (
-                  <AudioPanel workspace={workspace} audio={audio} />
+                  <AudioPanel
+                    workspace={workspace}
+                    audio={audio}
+                    compact
+                    onOpenMixer={() => setPanel('audio')}
+                  />
                 )}
               </WidgetFrame>
             ))}
@@ -235,7 +222,7 @@ function Experience({
         {workspace.widgets.every((w) => !w.visible) && (
           <div className="empty-canvas">
             <Leaf size={40} />
-            <p>Un espace vide, plein de possibles.</p>
+            <p>Aucun widget affiché.</p>
             <button onClick={() => setStudio(true)}>
               Ajouter un widget <PlusIcon />
             </button>
@@ -245,74 +232,72 @@ function Experience({
           <span>
             <Check size={12} /> Enregistré dans ce navigateur
           </span>
-          <span>Un peu moins de bruit. Un peu plus de toi.</span>
         </div>
       </div>
-      <footer className="bottom-bar">
-        <div className="dock" aria-label="Commandes de l’espace">
-          <button
-            className="dock-audio"
-            onClick={() => setPanel('audio')}
-            aria-label="Ouvrir les ambiances"
-          >
-            {audio.playing ? <Volume2 size={18} /> : <VolumeX size={18} />}
-            <span>
-              Ambiances<small>{audio.playing ? 'Le calme s’écoute' : 'Un fond de douceur'}</small>
-            </span>
-            {audio.playing && (
-              <span className="sound-bars" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-            )}
-          </button>
-          <span className="dock-divider" />
-          <button
-            className="icon-button"
-            aria-label="Capturer une pensée"
-            title="Pensée · N"
-            onClick={() => setPanel('thoughts')}
-          >
-            <Lightbulb size={20} />
-            {state.privateData.thoughts.length > 0 && <span className="notification-dot" />}
-          </button>
-          <button
-            className="icon-button"
-            aria-label={focus ? 'Quitter le mode Focus' : 'Activer le mode Focus'}
-            aria-pressed={focus}
-            title="Focus · F"
-            onClick={toggleFocus}
-          >
-            {focus ? <Minimize2 size={19} /> : <Maximize2 size={19} />}
-          </button>
-          <button
-            className="icon-button fullscreen-button"
-            aria-label={fullscreen ? 'Quitter le plein écran' : 'Plein écran'}
-            onClick={() => {
-              const operation = document.fullscreenElement
-                ? document.exitFullscreen()
-                : document.documentElement.requestFullscreen?.()
-              if (operation)
-                void operation.catch(() =>
-                  reportError(new Error('Le plein écran n’est pas disponible dans ce navigateur.')),
-                )
-            }}
-          >
-            <Expand size={18} />
-          </button>
-          <button
-            className="icon-button"
-            aria-label="Préférences"
-            onClick={() => setPanel('preferences')}
-          >
-            <Settings2 size={19} />
-          </button>
-        </div>
-        <div className="footer-note">
-          <Leaf size={12} /> Libre, local, et juste pour toi.
-        </div>
-      </footer>
+      {!focus && (
+        <footer className="bottom-bar">
+          <div className="dock" aria-label="Commandes de l’espace">
+            <button
+              className="dock-audio"
+              onClick={() => setPanel('audio')}
+              aria-label="Ouvrir les ambiances"
+            >
+              {audio.playing ? <Volume2 size={18} /> : <VolumeX size={18} />}
+              <span>Ambiances</span>
+              {audio.playing && (
+                <span className="sound-bars" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+              )}
+            </button>
+            <span className="dock-divider" />
+            <button
+              className="icon-button"
+              aria-label="Capturer une pensée"
+              title="Pensée · N"
+              onClick={() => setPanel('thoughts')}
+            >
+              <Lightbulb size={20} />
+              {state.privateData.thoughts.length > 0 && <span className="notification-dot" />}
+            </button>
+            <button
+              className="icon-button"
+              aria-label={focus ? 'Quitter le mode Focus' : 'Activer le mode Focus'}
+              aria-pressed={focus}
+              title="Focus · F"
+              onClick={toggleFocus}
+            >
+              {focus ? <Minimize2 size={19} /> : <Maximize2 size={19} />}
+            </button>
+            <button
+              className="icon-button fullscreen-button"
+              aria-label={fullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+              onClick={() => {
+                const operation = document.fullscreenElement
+                  ? document.exitFullscreen()
+                  : document.documentElement.requestFullscreen?.()
+                if (operation)
+                  void operation.catch(() =>
+                    reportError(
+                      new Error('Le plein écran n’est pas disponible dans ce navigateur.'),
+                    ),
+                  )
+              }}
+            >
+              <Expand size={18} />
+            </button>
+            <button
+              className="icon-button"
+              aria-label="Préférences"
+              onClick={() => setPanel('preferences')}
+            >
+              <Settings2 size={19} />
+            </button>
+          </div>
+        </footer>
+      )}
       {studio && (
         <Studio
           workspace={workspace}
@@ -322,9 +307,15 @@ function Experience({
         />
       )}
       {focus && (
-        <button className="focus-exit" onClick={toggleFocus}>
-          <PanelRight size={15} /> Retrouver l’espace
-        </button>
+        <FocusToolbar
+          state={state}
+          playing={audio.playing}
+          onToggle={toggleTimer}
+          onAudio={() => setPanel('audio')}
+          onThought={() => setPanel('thoughts')}
+          onExit={toggleFocus}
+          onWorkspace={() => setPanel('workspaces')}
+        />
       )}
       {panel === 'workspaces' && <WorkspaceDialog state={state} onClose={close} />}
       {panel === 'timer' && <TimerSettings profile={workspace.timerProfile} onClose={close} />}
@@ -334,7 +325,7 @@ function Experience({
       )}
       {panel === 'data' && <DataPanel onClose={close} />}
       {panel === 'audio' && (
-        <Dialog title="Le son de ton petit coin" onClose={close}>
+        <Dialog title="Ambiances" onClose={close}>
           <AudioPanel workspace={workspace} audio={audio} />
         </Dialog>
       )}
@@ -343,4 +334,70 @@ function Experience({
 }
 function PlusIcon() {
   return <ArrowUpRight size={16} />
+}
+
+function FocusToolbar({
+  state,
+  playing,
+  onToggle,
+  onAudio,
+  onThought,
+  onExit,
+  onWorkspace,
+}: {
+  state: AppState
+  playing: boolean
+  onToggle: () => void
+  onAudio: () => void
+  onThought: () => void
+  onExit: () => void
+  onWorkspace: () => void
+}) {
+  const now = useNow()
+  const running = state.timer.status === 'running'
+  return (
+    <nav className="focus-toolbar" aria-label="Commandes du mode Focus">
+      <button
+        onClick={onToggle}
+        aria-label={running ? 'Suspendre la session' : 'Démarrer ou reprendre la session'}
+      >
+        {running ? <Pause size={17} /> : <Play size={17} />}
+        <span className="focus-time">{formatDuration(timerValue(state.timer, now))}</span>
+      </button>
+      <span className="dock-divider" />
+      <button
+        className="icon-button"
+        aria-label="Ouvrir les ambiances"
+        title="Ambiances"
+        onClick={onAudio}
+      >
+        {playing ? <Volume2 size={18} /> : <VolumeX size={18} />}
+      </button>
+      <button
+        className="icon-button"
+        aria-label="Capturer une pensée"
+        title="Pensée · N"
+        onClick={onThought}
+      >
+        <Lightbulb size={18} />
+      </button>
+      <button
+        className="icon-button"
+        aria-label="Changer d’espace"
+        title="Espaces"
+        onClick={onWorkspace}
+      >
+        <PanelsTopLeft size={18} />
+      </button>
+      <button
+        className="focus-leave"
+        aria-label="Quitter le mode Focus"
+        title="Quitter Focus · F"
+        onClick={onExit}
+      >
+        <Minimize2 size={17} />
+        <span>Quitter Focus</span>
+      </button>
+    </nav>
+  )
 }

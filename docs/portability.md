@@ -4,10 +4,10 @@ Komolu conserve les données uniquement dans IndexedDB sur l’origine du naviga
 
 ## Deux formats JSON versionnés
 
-- `komolu-backup-YYYY-MM-DD.json` : `{format:"komolu-backup",version:1,exportedAt,state,media}`. Contient toutes les données privées et tous les médias locaux, même inutilisés. Chaque média est un objet `{id,name,mimeType,kind,size,createdAt,data}` dont `data` est le contenu binaire encodé en base64. Le fichier doit être conservé à l’abri ; il n’est pas chiffré.
-- `komolu-space-<nom>.json` : `{format:"komolu-space",version:1,exportedAt,workspace}`. Configuration de l’espace actif uniquement. Projection explicite des propriétés autorisées ; aucune tâche, note, pensée, préférence personnelle ni session en cours. Tous les médias locaux sont retirés : ni fichier, ni identifiant, ni nom, ni piste audio associée. Le fond retourne au décor intégré correspondant. Le nom et la description de l’espace, les libellés de minuterie et les noms des sons intégrés sont intentionnellement partagés : ils sont à relire avant diffusion.
+- `komolu-backup-YYYY-MM-DD.json` : `{format:"komolu-backup",version:2,exportedAt,state,media}`. Contient toutes les données privées et tous les médias locaux, même inutilisés. Chaque média est un objet `{id,name,mimeType,kind,size,createdAt,data}` dont `data` est le contenu binaire encodé en base64. Le fichier doit être conservé à l’abri ; il n’est pas chiffré.
+- `komolu-space-<nom>.json` : `{format:"komolu-space",version:2,exportedAt,workspace}`. Configuration de l’espace actif uniquement. Projection explicite des propriétés autorisées ; aucune tâche, note, pensée, préférence globale personnelle ni session en cours. La palette et le mode Focus de cet espace sont inclus. Tous les médias locaux sont retirés : ni fichier, ni identifiant, ni nom, ni piste audio associée. Un fond image/vidéo local retourne au décor intégré correspondant ; les fonds unis et dégradés sont conservés. Le nom et la description de l’espace, les libellés de minuterie et les noms des sons intégrés sont intentionnellement partagés : ils sont à relire avant diffusion.
 
-Le JSON unique facilite l’inspection et évite extraction ZIP et bombes de décompression. Le surcoût base64 est d’environ un tiers. Aucune migration silencieuse n’est appliquée : les versions inconnues sont refusées avec un message explicite. Le format et le schéma de données sont aujourd’hui en version 1.
+Le JSON unique facilite l’inspection et évite extraction ZIP et bombes de décompression. Le surcoût base64 est d’environ un tiers. Le format et le schéma de données sont en version 2. Les anciens fichiers version 1 sont d’abord validés selon leur contrat historique, puis migrés et validés en version 2 avant l’aperçu. Les versions inconnues sont refusées avec un message explicite.
 
 ## Vérification avant écriture
 
@@ -35,3 +35,9 @@ L’export capture état et médias dans une seule transaction en lecture, puis 
 La préparation décode et contrôle tous les médias hors transaction. Un jeton interne associe l’aperçu à son instantané validé ; une modification ultérieure de l’objet d’aperçu ne peut modifier le contenu importé. L’application effectue une transaction unique couvrant état et médias. En cas de quota insuffisant, erreur ou dépassement des limites de fusion, toutes les écritures sont annulées. Le contenu local reste disponible. Le bouton d’annulation de l’aperçu n’applique aucune écriture.
 
 Contrats : `src/core/schema.ts` valide les formats ; `src/core/portability.ts` expose `exportBackup`, `exportSpace`, `prepareImport`, `readImport`, `applyImport`, `resetLocalData` et `downloadPortable`. Les tests utilisent une fonction de contrôle média injectée pour les transactions IndexedDB simulées ; les tests navigateur vérifient le décodage réel PNG/WAV et les téléchargements.
+
+## Mise à jour depuis 1.0.0
+
+La base IndexedDB passe de version 1 à 2 dans une transaction. Les données personnelles, médias et session sont conservés ; la palette reprend celle de l’ancien décor et le Focus global devient le Focus de l’espace actif. Les nouvelles pistes natives sont ajoutées désactivées aux mixes existants sans remplacer leurs volumes. Les descriptions générées par les anciens modèles sont retirées ; les descriptions personnalisées sont conservées.
+
+Conserve une sauvegarde avant la mise à jour. L’application 1.0.0 ne sait pas ouvrir une base version 2 ni importer un export version 2. Un retour à 1.0.0 nécessite une installation sur une origine distincte avec la sauvegarde version 1 correspondante ; ne supprime pas les données actuelles pour tester un retour en arrière.

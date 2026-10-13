@@ -16,9 +16,10 @@ export function TimerSettings({
   const [draft, setDraft] = useState(() => structuredClone(profile))
   const valid = validateProfile(draft)
   return (
-    <Dialog title="Ton rythme" onClose={onClose}>
+    <Dialog title="Profil de minuterie" onClose={onClose}>
       <p className="muted">
-        Les changements s’appliquent à la prochaine session. La session en cours garde son rythme.
+        Les changements s’appliquent à la prochaine session. La session en cours conserve ses
+        réglages.
       </p>
       <div className="profile-options">
         {TIMER_PROFILES.map((p) => (
@@ -32,7 +33,7 @@ export function TimerSettings({
         ))}
       </div>
       <label className="field">
-        Nom du rythme
+        Nom du profil
         <input
           value={draft.name}
           maxLength={100}
@@ -139,7 +140,7 @@ export function TimerSettings({
                 id: 'custom',
                 phases: [
                   ...draft.phases,
-                  { id: uid(), label: 'Respirer', kind: 'break', durationMs: 5 * 60_000 },
+                  { id: uid(), label: 'Pause', kind: 'break', durationMs: 5 * 60_000 },
                 ],
               })
             }
@@ -173,7 +174,7 @@ export function TimerSettings({
           checked={draft.sound}
           onChange={(e) => setDraft({ ...draft, sound: e.target.checked })}
         />{' '}
-        Son doux en fin de phase
+        Son en fin de phase
       </label>
       {!valid && (
         <p role="alert">
@@ -185,7 +186,7 @@ export function TimerSettings({
         disabled={!valid}
         onClick={() => act(actions.timerProfile(draft).then(onClose))}
       >
-        Enregistrer ce rythme
+        Enregistrer le profil
       </button>
     </Dialog>
   )

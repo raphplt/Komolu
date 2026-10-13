@@ -55,10 +55,13 @@ export function ClockWidget({ widget }: { widget: Widget }) {
   const value = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0)
   return (
     <div
-      className={`clock-content clock-${widget.settings.typography ?? 'sans'} clock-${widget.settings.clockSize ?? 'large'}`}
-      style={{ textAlign: widget.settings.alignment ?? 'left' }}
+      className={`clock-content clock-${widget.settings.typography ?? 'sans'} clock-${widget.settings.clockSize ?? 'large'} clock-shadow-${widget.settings.shadow ?? 'none'}`}
+      style={{
+        textAlign: widget.settings.alignment ?? 'left',
+        color: widget.settings.color,
+        ...(widget.settings.color ? { '--ink': widget.settings.color } : {}),
+      }}
     >
-      <p className="eyebrow">ICI, MAINTENANT</p>
       {clockStyle === 'analog' ? (
         <div className="analog-clock" role="img" aria-label={time}>
           {Array.from({ length: 12 }, (_, i) => (
@@ -78,9 +81,7 @@ export function ClockWidget({ widget }: { widget: Widget }) {
         <time className="clock-time">{time}</time>
       )}
       {showDate !== false && <p className="clock-date">{day}</p>}
-      <span className="tiny muted">
-        {timezone ? timezone.replaceAll('_', ' ') : 'Un instant, juste ici.'}
-      </span>
+      {timezone && <span className="tiny muted">{timezone.replaceAll('_', ' ')}</span>}
     </div>
   )
 }
@@ -106,9 +107,7 @@ export function TimerWidget({
   return (
     <div className="timer-content">
       <div className="timer-top">
-        <span className="eyebrow">
-          {phase.kind === 'break' ? 'UNE PETITE RESPIRATION' : 'LE TEMPS DE SE POSER'}
-        </span>
+        <span className="eyebrow">Minuterie</span>
         <button className="icon-button" aria-label="Régler la minuterie" onClick={onSettings}>
           <MoreHorizontal size={20} />
         </button>
@@ -134,14 +133,14 @@ export function TimerWidget({
           </div>
           <p className="timer-state">
             {timer.status === 'paused'
-              ? 'Le temps de souffler.'
+              ? 'En pause'
               : timer.status === 'waiting'
-                ? 'La suite t’attend.'
+                ? 'Phase suivante prête'
                 : timer.status === 'completed'
-                  ? 'Un pas de plus. C’est déjà bien.'
+                  ? 'Terminée'
                   : running
-                    ? 'Une seule chose à la fois.'
-                    : 'À ton rythme. Sans pression.'}
+                    ? 'En cours'
+                    : 'Prêt'}
           </p>
         </div>
       </div>
@@ -189,7 +188,7 @@ export function TimerWidget({
       </button>
       {task && (
         <p className="active-task">
-          <span>EN TÊTE</span> {task.title}
+          <span>TÂCHE ACTIVE</span> {task.title}
         </p>
       )}
       {timer.clockWarning && (
@@ -208,9 +207,8 @@ export function TasksWidget({ state }: { state: AppState }) {
   const data = state.privateData
   return (
     <div className="tasks-content">
-      <p className="eyebrow">UN PETIT PAS</p>
       <h2>
-        L’essentiel du jour{' '}
+        Tâches{' '}
         <span className="count">
           {data.tasks.filter((t) => t.done).length}/{data.tasks.length}
         </span>
@@ -229,7 +227,7 @@ export function TasksWidget({ state }: { state: AppState }) {
       >
         <input
           aria-label="Nouvelle tâche"
-          placeholder="Qu’as-tu en tête ?"
+          placeholder="Ajouter une tâche"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           maxLength={500}
@@ -339,11 +337,7 @@ export function TasksWidget({ state }: { state: AppState }) {
             <path d="M24 66C23 41 40 17 58 15C64 34 55 60 24 66Z" />
             <path d="M26 66L55 22M41 46L33 32M40 47L57 44M22 68H78" />
           </svg>
-          <p>
-            Une petite intention suffit.
-            <br />
-            Le reste peut attendre.
-          </p>
+          <p>Aucune tâche.</p>
         </div>
       )}
       <label className="check-field task-completed">
@@ -382,12 +376,12 @@ export function NotesWidget({ notes, dataEpoch }: { notes: string; dataEpoch?: s
   return (
     <div className="notes-content">
       <div className="widget-heading">
-        <p className="eyebrow">LE FIL DE TES IDÉES</p>
+        <p className="eyebrow">Bloc-notes</p>
         <Pencil size={15} />
       </div>
       <textarea
         aria-label="Bloc-notes"
-        placeholder="Un mot, une idée, un début…"
+        placeholder="Écrire une note…"
         value={draft.text}
         maxLength={100_000}
         onChange={(event) => controller.edit(event.target.value)}
@@ -396,7 +390,7 @@ export function NotesWidget({ notes, dataEpoch }: { notes: string; dataEpoch?: s
         }}
       />
       <span className="tiny muted" role="status">
-        {draft.status || 'Ton carnet. Rien qu’à toi.'}
+        {draft.status}
       </span>
       {draft.status.startsWith('Non') && (
         <button

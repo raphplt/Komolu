@@ -1,0 +1,58 @@
+Komolu — bundled audio credits
+Verified on 2026-10-13. All seven source uploads display CC0 1.0.
+License: https://creativecommons.org/publicdomain/zero/1.0/
+These files derive from public MP3 previews, not original account-only downloads.
+Changes: excerpt, stereo 32 kHz, DC removal, 2-second equal-power overlap,
+soft peak control, RMS normalization to -22 dBFS, 16-bit FLAC.
+White/brown noise and completion chime: original Komolu synthesis, MIT.
+Full source and output checksums: audio/manifest.json
+
+rain — Soft rain.WAV by barkenov
+Author: barkenov
+Source: https://freesound.org/people/barkenov/sounds/640655/
+Public preview: https://cdn.freesound.org/previews/640/640655_2414299-hq.mp3
+Source SHA-256: f5e4d1958e192762dc35e535e79afd30755986e18e7edabade998d84d446e6b9
+Distributed SHA-256: 863a145b135f858a99b21ff0a5a22f85847f20237edcec4f3db263d58cdf33d3
+
+fire — Fireplace (light).WAV by Makape
+Author: Makape
+Source: https://freesound.org/people/Makape/sounds/414117/
+Public preview: https://cdn.freesound.org/previews/414/414117_4884657-hq.mp3
+Source SHA-256: c9bed192c1370404bb700d6ddf6495097d89eb7a5b321153cbdb021bfc2fe188
+Distributed SHA-256: 90501503a0d5748d05ce07cbc66a9b3ca707b7861321d96191007cb62d3faf88
+
+forest — forest_birds.wav by ktokrzysiek
+Author: ktokrzysiek
+Source: https://freesound.org/people/ktokrzysiek/sounds/392603/
+Public preview: https://cdn.freesound.org/previews/392/392603_4924078-hq.mp3
+Source SHA-256: 717477d07e606f8a38796bd58456c6f8fd50ed2fece8cf00a036ad3de3033ffb
+Distributed SHA-256: 7a7dc71a20bd8ec386778dc63be047661f3d8f7067016d0dbd3c1592150d804b
+
+waves — Ocean Waves.wav by Noted451
+Author: Noted451
+Source: https://freesound.org/people/Noted451/sounds/531015/
+Public preview: https://cdn.freesound.org/previews/531/531015_9818404-hq.mp3
+Source SHA-256: e8d86b3255af21600ab35254b2f362fe2a52bc5e9aaa9fbbea3d56d19aaab078
+Distributed SHA-256: 03dc6015c6abc54435ea9f568d3d7bfac57ab67af86cfc78f3b31baa52286f5f
+
+cafe — coffee shop ambience by waweee
+Author: waweee
+Source: https://freesound.org/people/waweee/sounds/370973/
+Public preview: https://cdn.freesound.org/previews/370/370973_5835751-hq.mp3
+Source SHA-256: 6d23822d494bc1d60d2fc4f77056ad1a4db8caee5472208c5558dcfbc5d683a7
+Distributed SHA-256: 592cbb5a4887a114426e8aabfcc9f4db7282cf85001a66ea97d85e6d170652aa
+
+wind — wind in the trees from cover by strangy
+Author: strangy
+Source: https://freesound.org/people/strangy/sounds/176253/
+Public preview: https://cdn.freesound.org/previews/176/176253_1222472-hq.mp3
+Source SHA-256: 5e25b6201fe70efcca1c0ce7cd3ea7d40cbde64efe4c45134be3b2ce076739ab
+Distributed SHA-256: dd78ea8ba3845da17149086e467d96def221274e3f3ea3f624c0208b07f66c97
+
+thunder — 230823 Thunder, dry distant rolling, R-07 EM272s, Stratford 12pm by TRP
+Author: TRP
+Source: https://freesound.org/people/TRP/sounds/717890/
+Public preview: https://cdn.freesound.org/previews/717/717890_97550-hq.mp3
+Source SHA-256: 9fef0328de54f0555625235c2a8cc6a76f90f90a8c57df6e9be2f07bda591afe
+Distributed SHA-256: d704cf16a8e3bf84fe3ddb7ecf38756d58ec14541ede3cb6b785e061da4b5a66
+

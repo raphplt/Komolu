@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1 as const
+export const SCHEMA_VERSION = 2 as const
 export type Scene = 'minimal' | 'cozy' | 'deep'
 export type WidgetType = 'clock' | 'timer' | 'tasks' | 'notes' | 'audio'
 export interface Widget {
@@ -17,6 +17,8 @@ export interface Widget {
     alignment?: 'left' | 'center'
     typography?: 'serif' | 'sans'
     clockSize?: 'small' | 'large'
+    color?: string
+    shadow?: 'none' | 'soft' | 'strong'
   }
 }
 export interface TimerPhase {
@@ -50,7 +52,8 @@ export interface TimerState {
   clockWarning: boolean
   taskId: string | null
 }
-export type SoundId = 'brown' | 'rain' | 'wind' | 'fire' | 'waves'
+export type SoundId =
+  'brown' | 'white' | 'rain' | 'thunder' | 'wind' | 'fire' | 'forest' | 'cafe' | 'waves'
 export interface AudioTrack {
   id: string
   source: SoundId | 'media'
@@ -66,7 +69,10 @@ export interface AudioProfile {
 }
 export interface Background {
   scene: Scene
-  type: 'scene' | 'image' | 'video'
+  type: 'scene' | 'solid' | 'gradient' | 'image' | 'video'
+  solidColor: string
+  gradient: { from: string; to: string; angle: number }
+  tintOpacity: number
   mediaId?: string
   dim: number
   blur: number
@@ -75,7 +81,9 @@ export interface Background {
 }
 export interface Workspace {
   id: string
-  version: 1
+  version: 2
+  palette: Scene
+  focusMode: boolean
   name: string
   description: string
   background: Background
@@ -104,7 +112,6 @@ export interface PrivateData {
 }
 export interface Preferences {
   reducedMotion: boolean
-  focusMode: boolean
   endSound: boolean
   shortcuts?: boolean
 }

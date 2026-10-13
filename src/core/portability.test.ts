@@ -27,7 +27,7 @@ afterEach(async () => {
 function backup(): Backup {
   return {
     format: 'komolu-backup',
-    version: 1,
+    version: 2,
     exportedAt: Date.now(),
     state: createInitialState(),
     media: [],
@@ -64,7 +64,7 @@ describe('strict portable schema', () => {
     [
       'future format',
       (f: Backup) => {
-        ;(f as unknown as { version: number }).version = 2
+        ;(f as unknown as { version: number }).version = 3
       },
     ],
     [
@@ -311,7 +311,7 @@ describe('atomic portability', () => {
     const text = JSON.stringify(file)
     expect(text).not.toMatch(/PRIVATE|private-media-id|privateData|taskId|lastSoundKey|mediaId/)
     expect(file.workspace.background.type).toBe('scene')
-    expect(file.workspace.audio.tracks).toHaveLength(5)
+    expect(file.workspace.audio.tracks).toHaveLength(9)
     const target = await database()
     await mutateState((s) => {
       s.privateData.notes = 'keep'
@@ -325,7 +325,7 @@ describe('atomic portability', () => {
   it('rejects private or unknown fields embedded in shared settings', () => {
     const w = createInitialState().workspaces[0]
     Object.assign(w.widgets[0].settings, { privateData: 'secret' })
-    const f = { format: 'komolu-space', version: 1, exportedAt: 0, workspace: shareWorkspace(w) }
+    const f = { format: 'komolu-space', version: 2, exportedAt: 0, workspace: shareWorkspace(w) }
     expect(() => validatePortable(f)).toThrow()
   })
   it('remaps collisions and all media refs, appends notes and keeps local session/preferences', async () => {

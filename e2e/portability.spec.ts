@@ -114,7 +114,7 @@ async function seedPrivateContent(page: Page) {
   await expect(page.getByRole('status').filter({ hasText: 'Enregistré ici' })).toBeVisible()
   await page.getByRole('button', { name: 'Capturer une pensée', exact: true }).click()
   await page.getByRole('textbox', { name: 'Nouvelle pensée', exact: true }).fill(privateThought)
-  await page.getByRole('button', { name: /Déposer et revenir/ }).click()
+  await page.getByRole('button', { name: 'Enregistrer et fermer', exact: true }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
 }
 async function seedMedia(page: Page) {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ImagePlus, Trash2 } from 'lucide-react'
-import type { Background as BackgroundModel, Workspace } from '../core/model'
+import type { Background as BackgroundModel, Scene, Workspace } from '../core/model'
 import { db } from '../core/storage'
 import { deleteMedia, importMedia, mediaAccept, MAX_LIBRARY_BYTES } from '../core/media'
 import { actions } from '../core/store'
@@ -112,8 +112,19 @@ export function Background({
           transform: background.blur ? 'scale(1.04)' : undefined,
         }}
       >
-        {children}
-        {background.type !== 'scene' && (
+        {background.type === 'solid' ? (
+          <div className="generated-background" style={{ background: background.solidColor }} />
+        ) : background.type === 'gradient' ? (
+          <div
+            className="generated-background"
+            style={{
+              background: `linear-gradient(${background.gradient.angle}deg, ${background.gradient.from}, ${background.gradient.to})`,
+            }}
+          />
+        ) : (
+          children
+        )}
+        {(background.type === 'image' || background.type === 'video') && (
           <LocalBackground
             key={`${background.mediaId}:${background.type}`}
             background={background}
@@ -124,7 +135,7 @@ export function Background({
       <div
         className="background-tint"
         aria-hidden="true"
-        style={{ background: background.color }}
+        style={{ background: background.color, opacity: background.tintOpacity }}
       />
       <div className="background-dim" aria-hidden="true" style={{ opacity: background.dim }} />
     </div>
@@ -152,7 +163,8 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
         const target = state.workspaces.find((item) => item.id === workspace.id)
         if (target) {
           Object.assign(target.background, patch)
-          if (target.background.type === 'scene') delete target.background.mediaId
+          if (target.background.type !== 'image' && target.background.type !== 'video')
+            delete target.background.mediaId
         }
       })
     } catch {
@@ -186,6 +198,119 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
   const used = library?.reduce((sum, record) => sum + record.size, 0) ?? 0
   return (
     <div className="background-settings">
+      <label>
+        Type de fond
+        <select
+          aria-label="Type de fond"
+          value={
+            workspace.background.type === 'image' || workspace.background.type === 'video'
+              ? 'media'
+              : workspace.background.type
+          }
+          onChange={(event) => {
+            const type = event.target.value as 'scene' | 'solid' | 'gradient'
+            if (type !== 'scene' && type !== 'solid' && type !== 'gradient') return
+            void change({ type })
+          }}
+        >
+          <option value="scene">Scène illustrée</option>
+          <option value="solid">Couleur unie</option>
+          <option value="gradient">Dégradé</option>
+          {(workspace.background.type === 'image' || workspace.background.type === 'video') && (
+            <option value="media">Média personnel</option>
+          )}
+        </select>
+      </label>
+      <label>
+        {workspace.background.type === 'scene' ? 'Scène' : 'Scène de secours'}
+        <select
+          aria-label="Scène"
+          value={workspace.background.scene}
+          onChange={(event) => void change({ scene: event.target.value as Scene })}
+        >
+          <option value="minimal">Minimal</option>
+          <option value="cozy">Cozy</option>
+          <option value="deep">Deep Work</option>
+        </select>
+      </label>
+      <label>
+        Palette des widgets
+        <select
+          aria-label="Palette des widgets"
+          value={workspace.palette}
+          onChange={(event) => {
+            const palette = event.target.value as Scene
+            void actions
+              .update((state) => {
+                const target = state.workspaces.find((item) => item.id === workspace.id)
+                if (target) target.palette = palette
+              })
+              .catch(() => setError('Impossible de sauvegarder la palette.'))
+          }}
+        >
+          <option value="minimal">Claire · sauge</option>
+          <option value="cozy">Chaude · caramel</option>
+          <option value="deep">Sombre · mauve</option>
+        </select>
+      </label>
+      {workspace.background.type === 'solid' && (
+        <label className="media-color-label">
+          Couleur du fond
+          <input
+            type="color"
+            aria-label="Couleur du fond"
+            value={workspace.background.solidColor}
+            onChange={(event) => void change({ solidColor: event.target.value })}
+          />
+        </label>
+      )}
+      {workspace.background.type === 'gradient' && (
+        <fieldset className="gradient-fields">
+          <legend>Dégradé</legend>
+          <label className="media-color-label">
+            Première couleur
+            <input
+              type="color"
+              aria-label="Première couleur du dégradé"
+              value={workspace.background.gradient.from}
+              onChange={(event) =>
+                void change({
+                  gradient: { ...workspace.background.gradient, from: event.target.value },
+                })
+              }
+            />
+          </label>
+          <label className="media-color-label">
+            Seconde couleur
+            <input
+              type="color"
+              aria-label="Seconde couleur du dégradé"
+              value={workspace.background.gradient.to}
+              onChange={(event) =>
+                void change({
+                  gradient: { ...workspace.background.gradient, to: event.target.value },
+                })
+              }
+            />
+          </label>
+          <label>
+            Angle <output>{workspace.background.gradient.angle}°</output>
+            <input
+              type="range"
+              aria-label="Angle du dégradé"
+              min="0"
+              max="360"
+              step="5"
+              value={workspace.background.gradient.angle}
+              onChange={(event) =>
+                void change({
+                  gradient: { ...workspace.background.gradient, angle: Number(event.target.value) },
+                })
+              }
+            />
+          </label>
+        </fieldset>
+      )}
       <label className="media-upload">
         <ImagePlus size={17} /> {busy ? 'Vérification du média…' : 'Importer une image ou vidéo'}
         <input
@@ -203,7 +328,7 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
       <p className="media-hint">
         JPEG, PNG, WebP, AVIF · MP4, WebM, OGG. 50 Mo par fichier, stocké uniquement ici.
       </p>
-      {workspace.background.type !== 'scene' && (
+      {(workspace.background.type === 'image' || workspace.background.type === 'video') && (
         <button
           className="text-button"
           onClick={() => void change({ type: 'scene', mediaId: undefined })}
@@ -256,6 +381,18 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
           type="color"
           value={workspace.background.color}
           onChange={(event) => void change({ color: event.target.value })}
+        />
+      </label>
+      <label>
+        Intensité du voile <output>{Math.round(workspace.background.tintOpacity * 100)} %</output>
+        <input
+          aria-label="Intensité du voile"
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={workspace.background.tintOpacity}
+          onChange={(event) => void change({ tintOpacity: Number(event.target.value) })}
         />
       </label>
       <details className="media-library">

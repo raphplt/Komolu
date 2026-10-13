@@ -10,10 +10,7 @@ test('notes keep the latest rapid edit after blur and across spaces', async ({ p
   await expect(notes).toHaveValue('Premier jet, puis la version à conserver')
   await expect(page.getByRole('status').filter({ hasText: 'Enregistré ici' })).toBeVisible()
   await page.getByRole('button', { name: 'Minimal', exact: true }).click()
-  await page
-    .getByRole('dialog')
-    .getByRole('button', { name: /^Cozy .+/ })
-    .click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Cozy', exact: true }).click()
   await expect(notes).toHaveValue('Premier jet, puis la version à conserver')
   await page.reload()
   await expect(notes).toHaveValue('Premier jet, puis la version à conserver')
@@ -30,7 +27,7 @@ test('thought shortcut opens capture outside fields and converts it to a task', 
   await expect(capture).toBeFocused()
   await capture.pressSequentially('n f penser au prochain chapitre')
   await expect(capture).toHaveValue('n f penser au prochain chapitre')
-  await page.getByRole('button', { name: /Déposer et revenir/ }).click()
+  await page.getByRole('button', { name: 'Enregistrer et fermer', exact: true }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.getByRole('button', { name: 'Capturer une pensée' }).click()
   const thought = page
@@ -61,25 +58,25 @@ test('audio activation, track toggles, mute and levels persist without autoplay'
   await master.focus()
   await page.keyboard.press('ArrowRight')
   await expect(master).toHaveValue('0.41')
-  await dialog.getByRole('button', { name: 'Pluie douce', exact: true }).click()
-  await expect(dialog.getByRole('button', { name: 'Pluie douce', exact: true })).toHaveAttribute(
+  await dialog.getByRole('button', { name: 'Pluie', exact: true }).click()
+  await expect(dialog.getByRole('button', { name: 'Pluie', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   )
-  const rain = dialog.getByRole('slider', { name: 'Volume Pluie douce', exact: true })
+  const rain = dialog.getByRole('slider', { name: 'Volume Pluie', exact: true })
   await rain.focus()
   await page.keyboard.press('ArrowRight')
-  await expect(rain).toHaveValue('0.36')
+  await expect(rain).toHaveValue('0.46')
   await dialog.getByRole('button', { name: 'Couper le son', exact: true }).click()
   await expect(
     dialog.getByRole('button', { name: 'Rétablir le son', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true')
   await expect(master).toHaveValue('0.41')
-  await expect(rain).toHaveValue('0.36')
+  await expect(rain).toHaveValue('0.46')
   await page.reload()
   await page.getByRole('button', { name: 'Ouvrir les ambiances' }).click()
   await expect(dialog.getByRole('button', { name: 'Écouter', exact: true })).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Rétablir le son', exact: true })).toBeVisible()
   await expect(master).toHaveValue('0.41')
-  await expect(rain).toHaveValue('0.36')
+  await expect(rain).toHaveValue('0.46')
 })

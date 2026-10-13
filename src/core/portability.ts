@@ -5,6 +5,7 @@ import { MAX_MEDIA_COUNT } from './limits'
 import { inspectMedia, MAX_LIBRARY_BYTES, validateMediaFile } from './media'
 import { db, type KomoluDatabase, storageMessage } from './storage'
 import { cancelNoteDrafts, flushNotes } from './notes'
+import { migratePortable } from './migrations'
 import {
   MAX_FILE_BYTES,
   validatePortable,
@@ -53,7 +54,7 @@ export async function exportBackup(database = db): Promise<Backup> {
   const value = await snapshot(database)
   const file: Backup = {
     format: 'komolu-backup',
-    version: 1,
+    version: 2,
     exportedAt: Date.now(),
     state: value.state,
     media: [],
@@ -72,13 +73,21 @@ export async function exportBackup(database = db): Promise<Backup> {
 export function shareWorkspace(w: Workspace): Workspace {
   return {
     id: uid(),
-    version: 1,
+    version: 2,
+    palette: w.palette,
+    focusMode: w.focusMode,
     name: w.name,
     description: w.description,
     createdAt: Date.now(),
     background: {
       scene: w.background.scene,
-      type: 'scene',
+      type:
+        w.background.type === 'image' || w.background.type === 'video'
+          ? 'scene'
+          : w.background.type,
+      solidColor: w.background.solidColor,
+      gradient: { ...w.background.gradient },
+      tintOpacity: w.background.tintOpacity,
       dim: w.background.dim,
       blur: w.background.blur,
       position: w.background.position,
@@ -127,7 +136,7 @@ export async function exportSpace(database = db): Promise<SpaceFile> {
   const w = state.workspaces.find((w) => w.id === state.activeWorkspaceId)!
   const file: SpaceFile = {
     format: 'komolu-space',
-    version: 1,
+    version: 2,
     exportedAt: Date.now(),
     workspace: shareWorkspace(w),
   }
@@ -143,8 +152,7 @@ export function parsePortable(text: string): PortableFile {
   } catch {
     throw new Error('Ce fichier n’est pas un document JSON valide.')
   }
-  validatePortable(file)
-  return file
+  return migratePortable(file)
 }
 export async function prepareImport(text: string, inspect = inspectMedia): Promise<PreparedImport> {
   const file = parsePortable(text)

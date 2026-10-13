@@ -22,13 +22,41 @@ export function DataPanel({ onClose }: { onClose: () => void }) {
   const [confirm, setConfirm] = useState<'replace' | 'reset' | null>(null)
   const [phrase, setPhrase] = useState('')
   const [usage, setUsage] = useState('')
+  const [persistence, setPersistence] = useState<
+    'available' | 'granted' | 'denied' | 'unsupported' | 'error'
+  >(() => (typeof navigator.storage?.persist === 'function' ? 'available' : 'unsupported'))
+  const [requestingPersistence, setRequestingPersistence] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   useEffect(() => {
+    let disposed = false
+    void navigator.storage
+      ?.persisted?.()
+      .then((granted) => {
+        if (!disposed && granted) setPersistence('granted')
+      })
+      .catch(() => undefined)
     void navigator.storage
       ?.estimate?.()
       .then((value) => setUsage(`Environ ${size(value.usage ?? 0)} utilisés dans ce navigateur.`))
       .catch(() => undefined)
+    return () => {
+      disposed = true
+    }
   }, [])
+  const requestPersistence = async () => {
+    if (typeof navigator.storage?.persist !== 'function') {
+      setPersistence('unsupported')
+      return
+    }
+    setRequestingPersistence(true)
+    try {
+      setPersistence((await navigator.storage.persist()) ? 'granted' : 'denied')
+    } catch {
+      setPersistence('error')
+    } finally {
+      setRequestingPersistence(false)
+    }
+  }
   const run = async (fn: () => Promise<void>) => {
     setBusy(true)
     setError('')
@@ -69,6 +97,34 @@ export function DataPanel({ onClose }: { onClose: () => void }) {
           peut les effacer : télécharge régulièrement une sauvegarde et conserve-la en lieu sûr.
         </p>
         {usage && <p className="tiny muted">{usage}</p>}
+        <details className="storage-persistence">
+          <summary>Protection du stockage local</summary>
+          <p className="tiny muted">
+            Le navigateur peut limiter l’effacement automatique de ces données quand le stockage
+            manque. Cette protection ne remplace pas une sauvegarde et n’empêche pas un effacement
+            volontaire.
+          </p>
+          <p className="tiny" role="status">
+            {persistence === 'granted'
+              ? 'Protection accordée par ce navigateur.'
+              : persistence === 'denied'
+                ? 'Protection non accordée. Tes données actuelles restent disponibles ; conserve une sauvegarde.'
+                : persistence === 'unsupported'
+                  ? 'Ce navigateur ne propose pas cette protection.'
+                  : persistence === 'error'
+                    ? 'Impossible de demander cette protection. Tu peux réessayer.'
+                    : 'Protection non demandée ou non accordée.'}
+          </p>
+          {persistence !== 'granted' && persistence !== 'unsupported' && (
+            <button
+              type="button"
+              disabled={requestingPersistence || busy}
+              onClick={() => void requestPersistence()}
+            >
+              {requestingPersistence ? 'Demande en cours…' : 'Demander la protection'}
+            </button>
+          )}
+        </details>
         {error && (
           <p role="alert" className="data-error">
             {error}

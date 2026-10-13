@@ -16,14 +16,14 @@ export interface EncodedMedia extends Omit<MediaRecord, 'blob'> {
 }
 export interface Backup {
   format: 'komolu-backup'
-  version: 1
+  version: 2
   exportedAt: number
   state: AppState
   media: EncodedMedia[]
 }
 export interface SpaceFile {
   format: 'komolu-space'
-  version: 1
+  version: 2
   exportedAt: number
   workspace: Workspace
 }
@@ -69,6 +69,10 @@ function number(
     (integer && !Number.isInteger(value))
   )
     invalid(path, 'nombre hors limites')
+}
+function color(value: unknown, path: string) {
+  string(value, path, 7, 7)
+  if (!/^#[0-9a-f]{6}$/i.test(value)) invalid(path, 'couleur invalide')
 }
 function bool(value: unknown, path: string) {
   if (typeof value !== 'boolean') invalid(path, 'booléen attendu')
@@ -139,6 +143,8 @@ function widget(value: unknown, path: string): asserts value is Widget {
           'alignment',
           'typography',
           'clockSize',
+          'color',
+          'shadow',
         ]
       : [],
   )
@@ -148,8 +154,10 @@ function widget(value: unknown, path: string): asserts value is Widget {
     alignment: ['left', 'center'],
     typography: ['serif', 'sans'],
     clockSize: ['small', 'large'],
+    shadow: ['none', 'soft', 'strong'],
   }))
     if (key in settings) choice(settings[key], options, path)
+  if ('color' in settings) color(settings.color, `${path}.couleur`)
   for (const key of ['showSeconds', 'showDate']) if (key in settings) bool(settings[key], path)
   if ('timezone' in settings) {
     string(settings.timezone, path, 100)
@@ -166,6 +174,8 @@ export function validateWorkspace(value: unknown, path = 'espace'): asserts valu
     'version',
     'name',
     'description',
+    'palette',
+    'focusMode',
     'background',
     'widgets',
     'timerProfile',
@@ -173,24 +183,31 @@ export function validateWorkspace(value: unknown, path = 'espace'): asserts valu
     'createdAt',
   ])
   id(w.id, path)
-  choice(w.version, [1], path)
+  choice(w.version, [2], path)
+  choice(w.palette, ['minimal', 'cozy', 'deep'], `${path}.palette`)
+  bool(w.focusMode, `${path}.focus`)
   string(w.name, path, MAX_NAME_LENGTH, 1)
   string(w.description, path, 2000)
   number(w.createdAt, path)
   const b = object(
     w.background,
     `${path}.fond`,
-    ['scene', 'type', 'dim', 'blur', 'position', 'color'],
+    ['scene', 'type', 'dim', 'blur', 'position', 'color', 'solidColor', 'gradient', 'tintOpacity'],
     ['mediaId'],
   )
   choice(b.scene, ['minimal', 'cozy', 'deep'], path)
-  choice(b.type, ['scene', 'image', 'video'], path)
+  choice(b.type, ['scene', 'solid', 'gradient', 'image', 'video'], path)
   number(b.dim, path, 0, 1)
   number(b.blur, path, 0, 30)
   choice(b.position, ['50% 50%', '0% 50%', '100% 50%', '50% 0%', '50% 100%'], path)
-  string(b.color, path, 7, 7)
-  if (!/^#[0-9a-f]{6}$/i.test(b.color)) invalid(path, 'couleur invalide')
-  if (b.type !== 'scene') id(b.mediaId, path)
+  color(b.color, `${path}.voile`)
+  color(b.solidColor, `${path}.couleur`)
+  number(b.tintOpacity, path, 0, 1)
+  const gradient = object(b.gradient, `${path}.dégradé`, ['from', 'to', 'angle'])
+  color(gradient.from, path)
+  color(gradient.to, path)
+  number(gradient.angle, path, 0, 360)
+  if (b.type === 'image' || b.type === 'video') id(b.mediaId, path)
   else if ('mediaId' in b) invalid(path, 'référence média inattendue')
   array(w.widgets, path, MAX_WIDGETS).forEach((item, index) =>
     widget(item, `${path}.widgets[${index}]`),
@@ -203,7 +220,11 @@ export function validateWorkspace(value: unknown, path = 'espace'): asserts valu
   for (const item of array(a.tracks, path, MAX_TRACKS)) {
     const t = object(item, path, ['id', 'source', 'name', 'volume', 'enabled'], ['mediaId'])
     id(t.id, path)
-    choice(t.source, ['brown', 'rain', 'wind', 'fire', 'waves', 'media'], path)
+    choice(
+      t.source,
+      ['brown', 'white', 'rain', 'thunder', 'wind', 'fire', 'forest', 'cafe', 'waves', 'media'],
+      path,
+    )
     string(t.name, path, 200, 1)
     number(t.volume, path, 0, 1)
     bool(t.enabled, path)
@@ -281,7 +302,7 @@ export function validateState(value: unknown): asserts value is AppState {
     ['dataEpoch'],
   )
   if ('dataEpoch' in s) id(s.dataEpoch, 'génération des données')
-  choice(s.schemaVersion, [1], 'version des données')
+  choice(s.schemaVersion, [2], 'version des données')
   array(s.workspaces, 'espaces', MAX_WORKSPACES, 1).forEach((w, i) =>
     validateWorkspace(w, `espace[${i}]`),
   )
@@ -318,19 +339,14 @@ export function validateState(value: unknown): asserts value is AppState {
   for (const ref of [p.activeTaskId, s.timer.taskId])
     if (ref !== null && !(p.tasks as AppState['privateData']['tasks']).some((t) => t.id === ref))
       invalid('tâche active', 'référence manquante')
-  const pref = object(
-    s.preferences,
-    'préférences',
-    ['reducedMotion', 'focusMode', 'endSound'],
-    ['shortcuts'],
-  )
+  const pref = object(s.preferences, 'préférences', ['reducedMotion', 'endSound'], ['shortcuts'])
   for (const [key, value] of Object.entries(pref)) bool(value, key)
   number(s.updatedAt, 'date')
 }
 export function validatePortable(value: unknown): asserts value is PortableFile {
   if (!value || typeof value !== 'object') invalid('fichier', 'objet attendu')
   const header = value as ObjectValue
-  if (header.version !== 1)
+  if (header.version !== 2)
     invalid('version', 'version inconnue ; utilise une version compatible de Komolu')
   choice(header.format, ['komolu-backup', 'komolu-space'], 'format')
   const f = object(value, 'fichier', [
@@ -343,7 +359,8 @@ export function validatePortable(value: unknown): asserts value is PortableFile 
   if (f.format === 'komolu-space') {
     validateWorkspace(f.workspace)
     if (
-      f.workspace.background.type !== 'scene' ||
+      f.workspace.background.type === 'image' ||
+      f.workspace.background.type === 'video' ||
       f.workspace.audio.tracks.some((t) => t.source === 'media')
     )
       invalid('espace partagé', 'média local interdit')
@@ -377,7 +394,7 @@ export function validatePortable(value: unknown): asserts value is PortableFile 
   const lookup = new Map(media.map((m) => [m.id, m]))
   for (const w of f.state.workspaces) {
     if (
-      w.background.type !== 'scene' &&
+      (w.background.type === 'image' || w.background.type === 'video') &&
       lookup.get(w.background.mediaId!)?.kind !== w.background.type
     )
       invalid('fond', 'média absent ou type incompatible')

@@ -1,6 +1,6 @@
 # Auto-hébergement
 
-Komolu V1 est un site statique. Les données personnelles vivent dans IndexedDB sur le navigateur de chaque utilisateur. Sauvegarder le conteneur ne sauvegarde donc aucune tâche, note ou média utilisateur.
+Komolu est un site statique. La version `1.1.0-rc.1` est une candidate de reprise de la V1, en validation. Les données personnelles vivent dans IndexedDB sur le navigateur de chaque utilisateur. Sauvegarder le conteneur ne sauvegarde donc aucune tâche, note ou média utilisateur.
 
 ## Docker Compose
 
@@ -28,7 +28,7 @@ docker compose up --build --detach --wait
 docker compose down
 ```
 
-Ces commandes ne modifient pas les données du navigateur. Télécharge néanmoins une sauvegarde avant une mise à jour importante. Pour revenir à une version antérieure, reconstruis son tag ; une future version de schéma pourrait nécessiter la sauvegarde compatible de cette version.
+Le conteneur ne stocke pas les données personnelles. Lors de la prochaine ouverture, l’application peut toutefois migrer les données du navigateur : cette candidate passe du schéma 1 au schéma 2. Télécharge une sauvegarde avant la mise à jour. Revenir au tag 1.0.0 ne rétrograde pas IndexedDB : utilise une origine distincte et une sauvegarde version 1 pour tester cette ancienne version. [Migration et compatibilité](portability.md).
 
 ## Exposer sur Internet
 
@@ -45,7 +45,7 @@ npm run build
 
 Sers **le contenu de `dist/`** par HTTP(S), pas le dépôt source et pas `file://`. La base Vite `./` rend les assets relatifs : la racine ou un sous-chemin comme `/Komolu/` fonctionnent. Garde la barre oblique finale du répertoire. L'application n'utilise pas de routes client nécessitant une réécriture SPA ; les fichiers absents peuvent répondre 404.
 
-Le ZIP de release statique contient les mêmes fichiers. Il ne contient pas de données personnelles. `npm run preview` permet une vérification locale mais n'est pas destiné à être le serveur de production.
+Le ZIP de release statique contient les mêmes fichiers, y compris le répertoire `audio/` et ses attributions. Garde ce répertoire : les sept enregistrements sont chargés à la demande sur la même origine. Il ne contient pas de données personnelles. `npm run preview` permet une vérification locale mais n'est pas destiné à être le serveur de production.
 
 ## GitHub Pages
 
@@ -57,4 +57,4 @@ Référence : [Vite — déploiement statique](https://vite.dev/guide/static-dep
 
 ## Limites
 
-Il n'existe ni API de santé des données, ni restauration côté serveur, ni synchronisation. L'application déjà chargée peut continuer à fonctionner sans réseau, mais cette V1 n'installe aucun service worker et ne garantit pas un nouveau chargement hors ligne. Le mode privé du navigateur peut effacer son stockage en fin de session. Les réglages et médias restent propres à chaque origine.
+Il n'existe ni API de santé des données, ni restauration côté serveur, ni synchronisation. La minuterie et les données d’une application déjà chargée peuvent continuer sans réseau, mais aucun service worker ne garantit un nouveau chargement hors ligne. Un enregistrement audio qui n’a pas encore été chargé peut rester indisponible sans réseau ; les bruits synthétiques et médias personnels déjà accessibles restent locaux. Le mode privé du navigateur peut effacer son stockage en fin de session. Les réglages et médias restent propres à chaque origine.

@@ -1,5 +1,14 @@
-import { SCHEMA_VERSION, type AppState, type Scene, type Widget, type Workspace } from './model'
+import {
+  SCHEMA_VERSION,
+  type AppState,
+  type Scene,
+  type Widget,
+  type Workspace,
+  type AudioTrack,
+  type SoundId,
+} from './model'
 import { createTimer, TIMER_PROFILES } from './timer'
+import { SOUND_CATALOG } from './sounds'
 export const uid = () => crypto.randomUUID()
 export function defaultWidgets(scene: Scene = 'minimal'): Widget[] {
   const widgets: Widget[] = [
@@ -44,7 +53,7 @@ export function defaultWidgets(scene: Scene = 'minimal'): Widget[] {
       type: 'audio',
       version: 1,
       visible: true,
-      layout: { x: 4, y: 4, w: 4, h: 2 },
+      layout: { x: 4, y: 6, w: 4, h: 4 },
       style: { opacity: 1 },
       settings: {},
     },
@@ -71,20 +80,20 @@ export function defaultWidgets(scene: Scene = 'minimal'): Widget[] {
 }
 export function createWorkspace(scene: Scene, name?: string): Workspace {
   const names = { minimal: 'Minimal', cozy: 'Cozy', deep: 'Deep Work' }
-  const descriptions = {
-    minimal: 'De l’espace pour tes idées.',
-    cozy: 'Un refuge, juste pour toi.',
-    deep: 'Le calme des heures bleues.',
-  }
   return {
     id: uid(),
-    version: 1,
+    version: 2,
+    palette: scene,
+    focusMode: false,
     name: name ?? names[scene],
-    description: descriptions[scene],
+    description: '',
     createdAt: Date.now(),
     background: {
       scene,
       type: 'scene',
+      solidColor: scene === 'deep' ? '#18242c' : '#e9ede4',
+      gradient: { from: '#ebe7dd', to: '#b9cbbf', angle: 135 },
+      tintOpacity: 0.09,
       dim: scene === 'minimal' ? 0 : 0.1,
       blur: 0,
       position: '50% 50%',
@@ -95,13 +104,7 @@ export function createWorkspace(scene: Scene, name?: string): Workspace {
     audio: {
       master: 0.4,
       muted: false,
-      tracks: [
-        { id: 'brown', source: 'brown', name: 'Bruit brun', volume: 0.4, enabled: true },
-        { id: 'rain', source: 'rain', name: 'Pluie douce', volume: 0.35, enabled: false },
-        { id: 'wind', source: 'wind', name: 'Vent dans les arbres', volume: 0.25, enabled: false },
-        { id: 'fire', source: 'fire', name: 'Feu de cheminée', volume: 0.3, enabled: false },
-        { id: 'waves', source: 'waves', name: 'Vagues', volume: 0.3, enabled: false },
-      ],
+      tracks: defaultAudioTracks(scene),
     },
   }
 }
@@ -113,7 +116,25 @@ export function createInitialState(): AppState {
     activeWorkspaceId: workspaces[0].id,
     privateData: { tasks: [], activeTaskId: null, notes: '', thoughts: [], showCompleted: true },
     timer: createTimer(workspaces[0].timerProfile),
-    preferences: { reducedMotion: false, focusMode: false, endSound: false },
+    preferences: { reducedMotion: false, endSound: false },
     updatedAt: Date.now(),
   }
+}
+
+/** Names and gains are part of the portable preset, not an external service. */
+export const NATIVE_SOUNDS = SOUND_CATALOG.map(({ id, name, volume }) => ({
+  source: id,
+  name,
+  volume,
+}))
+export function defaultAudioTracks(scene: Scene): AudioTrack[] {
+  const enabled: SoundId[] =
+    scene === 'cozy' ? ['rain', 'fire'] : scene === 'deep' ? ['brown', 'wind'] : ['brown']
+  return NATIVE_SOUNDS.map(({ source, name, volume }) => ({
+    id: source,
+    source,
+    name,
+    volume,
+    enabled: enabled.includes(source),
+  }))
 }

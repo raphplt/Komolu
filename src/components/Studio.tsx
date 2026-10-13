@@ -16,21 +16,10 @@ import { defaultWidgets, uid } from '../core/presets'
 import { BackgroundSettings } from './Background'
 import { act } from '../core/ui'
 import { widgetRegistry, widgetStyle } from './widgetRegistry'
+import { placeWidget } from '../core/layout'
 function reveal(workspace: Workspace, id: string) {
   const item = workspace.widgets.find((widget) => widget.id === id)
-  if (!item) return
-  if (!item.visible) {
-    const a = item.layout
-    const others = workspace.widgets.filter((widget) => widget.id !== id && widget.visible)
-    if (
-      others.some((widget) => {
-        const b = widget.layout
-        return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
-      })
-    )
-      a.y = Math.max(0, ...others.map((widget) => widget.layout.y + widget.layout.h))
-  }
-  item.visible = true
+  if (item && !item.visible) workspace.widgets = placeWidget(workspace.widgets, id, item.layout)
 }
 export function WidgetFrame({
   widget,
@@ -86,7 +75,7 @@ export function WidgetFrame({
         : {
             ...g.layout,
             x: Math.max(0, Math.min(12 - g.layout.w, g.layout.x + dx)),
-            y: Math.max(0, Math.min(24, g.layout.y + dy)),
+            y: Math.max(0, Math.min(500, g.layout.y + dy)),
           },
     )
   }
@@ -97,9 +86,9 @@ export function WidgetFrame({
         actions
           .workspace((w) => {
             const item = w.widgets.find((i) => i.id === widget.id)
-            if (item) item.layout = preview
+            if (item) w.widgets = placeWidget(w.widgets, item.id, preview)
           })
-          .then(() => setPreview(null)),
+          .finally(() => setPreview(null)),
       )
     else setPreview(null)
   }
@@ -182,27 +171,31 @@ export function Studio({
     act(
       actions.workspace((w) => {
         const item = w.widgets.find((i) => i.id === selected)
-        if (item) fn(item)
+        if (item) {
+          fn(item)
+          if (item.type === 'clock' && item.settings.clockStyle === 'analog' && item.layout.h < 3)
+            w.widgets = placeWidget(w.widgets, item.id, { ...item.layout, h: 3 })
+        }
       }),
     )
   const layout = (key: keyof Widget['layout'], delta: number) => {
     if (!widget) return
-    const min = widgetRegistry[widget.type]
-    update((w) => {
-      const l = w.layout
-      l[key] += delta
-      l.w = Math.max(min.minW, Math.min(12, l.w))
-      l.h = Math.max(min.minH, Math.min(12, l.h))
-      l.x = Math.max(0, Math.min(12 - l.w, l.x))
-      l.y = Math.max(0, Math.min(24, l.y))
-    })
+    act(
+      actions.workspace((space) => {
+        const current = space.widgets.find((item) => item.id === widget.id)
+        if (!current) return
+        space.widgets = placeWidget(space.widgets, current.id, {
+          ...current.layout,
+          [key]: current.layout[key] + delta,
+        })
+      }),
+    )
   }
   return (
     <aside className="studio-panel" aria-label="Studio de personnalisation">
       <div className="dialog-heading">
         <div>
-          <p className="eyebrow">FAIS COMME CHEZ TOI</p>
-          <h2>Le Studio</h2>
+          <h2>Studio</h2>
         </div>
         <button className="icon-button" aria-label="Fermer le Studio" onClick={onClose}>
           <X size={20} />
@@ -248,6 +241,7 @@ export function Studio({
                       act(
                         actions.workspace((w) => {
                           w.widgets.push(fresh)
+                          w.widgets = placeWidget(w.widgets, fresh.id, fresh.layout)
                         }),
                       )
                       onSelect(fresh.id)
@@ -295,9 +289,15 @@ export function Studio({
                     checked={widget.visible}
                     onChange={(e) => {
                       const value = e.currentTarget.checked
-                      update((w) => {
-                        w.visible = value
-                      })
+                      act(
+                        actions.workspace((space) => {
+                          if (value) reveal(space, widget.id)
+                          else {
+                            const current = space.widgets.find((item) => item.id === widget.id)
+                            if (current) current.visible = false
+                          }
+                        }),
+                      )
                     }}
                   />{' '}
                   Afficher
@@ -316,6 +316,7 @@ export function Studio({
                       act(
                         actions.workspace((w) => {
                           w.widgets.push(copy)
+                          w.widgets = placeWidget(w.widgets, copy.id, copy.layout)
                         }),
                       )
                       onSelect(copy.id)
@@ -476,6 +477,51 @@ export function Studio({
                       {zoneError}
                     </p>
                   )}
+                  <label className="field">
+                    Couleur de l’horloge
+                    <input
+                      type="color"
+                      aria-label="Couleur de l’horloge"
+                      value={
+                        widget.settings.color ??
+                        (workspace.palette === 'minimal' ? '#35473d' : '#eee8e1')
+                      }
+                      onChange={(event) => {
+                        const value = event.currentTarget.value
+                        update((current) => {
+                          current.settings.color = value
+                        })
+                      }}
+                    />
+                  </label>
+                  {widget.settings.color && (
+                    <button
+                      className="text-button"
+                      onClick={() =>
+                        update((current) => {
+                          delete current.settings.color
+                        })
+                      }
+                    >
+                      Couleur du thème
+                    </button>
+                  )}
+                  <label className="field">
+                    Ombre de l’horloge
+                    <select
+                      value={widget.settings.shadow ?? 'none'}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value as 'none' | 'soft' | 'strong'
+                        update((current) => {
+                          current.settings.shadow = value
+                        })
+                      }}
+                    >
+                      <option value="none">Aucune</option>
+                      <option value="soft">Légère</option>
+                      <option value="strong">Marquée</option>
+                    </select>
+                  </label>
                   <label className="field">
                     Typographie
                     <select

@@ -1,0 +1,204 @@
+{
+  "format": "komolu-backup",
+  "version": 1,
+  "exportedAt": 1791882300000,
+  "state": {
+    "schemaVersion": 1,
+    "dataEpoch": "retained-epoch",
+    "activeWorkspaceId": "space-cozy",
+    "updatedAt": 1791882300000,
+    "preferences": {
+      "reducedMotion": true,
+      "focusMode": true,
+      "endSound": false,
+      "shortcuts": false
+    },
+    "privateData": {
+      "tasks": [
+        {
+          "id": "task-one",
+          "title": "Conserver cette tâche",
+          "done": false,
+          "createdAt": 1791882000000
+        }
+      ],
+      "activeTaskId": "task-one",
+      "notes": "Note privée avant mise à jour",
+      "thoughts": [
+        {
+          "id": "thought-one",
+          "text": "Une pensée à conserver",
+          "createdAt": 1791882000000
+        }
+      ],
+      "showCompleted": false
+    },
+    "timer": {
+      "status": "running",
+      "profile": {
+        "id": "custom",
+        "name": "Mon ancien rythme",
+        "mode": "sequence",
+        "phases": [
+          {
+            "id": "work",
+            "label": "Écrire",
+            "kind": "work",
+            "durationMs": 1500000
+          },
+          {
+            "id": "break",
+            "label": "Pause",
+            "kind": "break",
+            "durationMs": 300000
+          }
+        ],
+        "repeats": 3,
+        "autoAdvance": false,
+        "sound": true
+      },
+      "phaseIndex": 0,
+      "cycle": 0,
+      "remainingMs": 1500000,
+      "elapsedMs": 0,
+      "deadline": 1791883500000,
+      "startedAt": 1791882000000,
+      "lastObservedAt": 1791882300000,
+      "revision": 4,
+      "completedPhases": 0,
+      "clockWarning": false,
+      "taskId": "task-one"
+    },
+    "workspaces": [
+      {
+        "id": "space-cozy",
+        "version": 1,
+        "name": "Mon espace conservé",
+        "description": "Description personnelle",
+        "createdAt": 1791882000000,
+        "background": {
+          "scene": "cozy",
+          "type": "image",
+          "mediaId": "image-one",
+          "dim": 0.2,
+          "blur": 2,
+          "position": "0% 50%",
+          "color": "#e7ddca"
+        },
+        "widgets": [
+          {
+            "id": "clock",
+            "type": "clock",
+            "version": 1,
+            "visible": true,
+            "layout": {
+              "x": 0,
+              "y": 0,
+              "w": 4,
+              "h": 3
+            },
+            "style": {
+              "opacity": 0.7
+            },
+            "settings": {
+              "clockFormat": "12",
+              "showDate": false,
+              "showSeconds": true,
+              "clockStyle": "analog",
+              "timezone": "Europe/Paris",
+              "alignment": "center",
+              "typography": "serif",
+              "clockSize": "small"
+            }
+          },
+          {
+            "id": "timer",
+            "type": "timer",
+            "version": 1,
+            "visible": true,
+            "layout": {
+              "x": 4,
+              "y": 0,
+              "w": 5,
+              "h": 6
+            },
+            "style": {
+              "opacity": 1
+            },
+            "settings": {}
+          }
+        ],
+        "timerProfile": {
+          "id": "custom",
+          "name": "Mon ancien rythme",
+          "mode": "sequence",
+          "phases": [
+            {
+              "id": "work",
+              "label": "Écrire",
+              "kind": "work",
+              "durationMs": 1500000
+            },
+            {
+              "id": "break",
+              "label": "Pause",
+              "kind": "break",
+              "durationMs": 300000
+            }
+          ],
+          "repeats": 3,
+          "autoAdvance": false,
+          "sound": true
+        },
+        "audio": {
+          "master": 0.17,
+          "muted": true,
+          "tracks": [
+            {
+              "id": "brown",
+              "source": "brown",
+              "name": "Bruit brun",
+              "volume": 0.23,
+              "enabled": true
+            },
+            {
+              "id": "rain",
+              "source": "rain",
+              "name": "Pluie douce",
+              "volume": 0.47,
+              "enabled": true
+            },
+            {
+              "id": "white",
+              "source": "media",
+              "mediaId": "audio-one",
+              "name": "Mon enregistrement",
+              "volume": 0.38,
+              "enabled": false
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "media": [
+    {
+      "id": "image-one",
+      "name": "Fond privé.png",
+      "mimeType": "image/png",
+      "kind": "image",
+      "size": 69,
+      "createdAt": 1791882000000,
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNwzwgHAAIAAQfRnkkdAAAAAElFTkSuQmCC"
+    },
+    {
+      "id": "audio-one",
+      "name": "Son privé.wav",
+      "mimeType": "audio/wav",
+      "kind": "audio",
+      "size": 204,
+      "createdAt": 1791882000000,
+      "data": "UklGRsQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YaAAAAAAAFMBfQJdA9YD3ANsA5UCcAEfAMv+m/20/DD8IPyF/FP9c/7B/xcBTAI7A8kD5AOJA8MCqgFeAAf/zv3X/ED8Gvxq/Cf9Ov6D/9oAGAIWA7cD6AOiA+4C4gGcAEX/A/79/FP8GPxT/P38A/5F/5wA4gHuAqID6AO3AxYDGALaAIP/Ov4n/Wr8GvxA/Nf8zv0H/14AqgHDAokD5APJAzsD"
+    }
+  ]
+}

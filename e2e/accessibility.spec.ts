@@ -19,10 +19,7 @@ for (const scene of ['Cozy', 'Deep Work']) {
   test(`${scene} has no WCAG accessibility violations`, async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'Minimal', exact: true }).click()
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: new RegExp(`^${scene} .+`) })
-      .click()
+    await page.getByRole('dialog').getByRole('button', { name: scene, exact: true }).click()
     await expect(page.getByRole('button', { name: scene, exact: true })).toBeVisible()
     const report = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])

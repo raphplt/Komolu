@@ -9,7 +9,7 @@ export const TIMER_PROFILES: TimerProfile[] = [
     mode: 'sequence',
     phases: [
       { id: 'work', label: 'Concentration', kind: 'work', durationMs: 25 * 60_000 },
-      { id: 'break', label: 'Petite pause', kind: 'break', durationMs: 5 * 60_000 },
+      { id: 'break', label: 'Pause', kind: 'break', durationMs: 5 * 60_000 },
     ],
     repeats: 4,
     autoAdvance: false,
@@ -21,7 +21,7 @@ export const TIMER_PROFILES: TimerProfile[] = [
     mode: 'sequence',
     phases: [
       { id: 'work', label: 'Concentration', kind: 'work', durationMs: 50 * 60_000 },
-      { id: 'break', label: 'Respirer', kind: 'break', durationMs: 10 * 60_000 },
+      { id: 'break', label: 'Pause', kind: 'break', durationMs: 10 * 60_000 },
     ],
     repeats: 2,
     autoAdvance: false,
@@ -29,7 +29,7 @@ export const TIMER_PROFILES: TimerProfile[] = [
   },
   {
     id: 'free',
-    name: 'À ton rythme · libre',
+    name: 'Session libre',
     mode: 'free',
     phases: [{ id: 'free', label: 'Session libre', kind: 'work', durationMs: 0 }],
     repeats: 1,

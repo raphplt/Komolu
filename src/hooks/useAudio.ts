@@ -13,12 +13,21 @@ export function useAudio(profile: AudioProfile) {
   const operation = useRef(0)
   const serialized = JSON.stringify(profile)
   useEffect(() => {
+    let current = true
+    const transport = operation.current
     profileRef.current = JSON.parse(serialized) as AudioProfile
     void engine
       .update(profileRef.current)
-      .catch((error) =>
-        setError(error instanceof Error ? error.message : 'Impossible de mettre à jour les sons.'),
-      )
+      .catch((error) => {
+        if (current && transport === operation.current)
+          setError(error instanceof Error ? error.message : 'Impossible de mettre à jour les sons.')
+      })
+      .finally(() => {
+        if (current && transport === operation.current) setPlaying(engine.playing)
+      })
+    return () => {
+      current = false
+    }
   }, [engine, serialized])
   useEffect(
     () => () => {

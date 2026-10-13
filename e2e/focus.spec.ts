@@ -65,10 +65,7 @@ test('private task survives workspace changes and typing does not start shortcut
   await expect(page.getByRole('button', { name: 'Démarrer', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Ajouter la tâche', exact: true }).click()
   await page.getByRole('button', { name: 'Minimal', exact: true }).click()
-  await page
-    .getByRole('dialog')
-    .getByRole('button', { name: /^Deep Work .+/ })
-    .click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Deep Work', exact: true }).click()
   await expect(
     page.getByRole('button', { name: 'n f une pensée privée', exact: true }),
   ).toBeVisible()

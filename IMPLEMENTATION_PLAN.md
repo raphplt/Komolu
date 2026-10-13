@@ -1,5 +1,7 @@
 # Komolu — plan de livraison
 
+> **Requalification du 13 octobre 2026 après retour utilisateur.** La clôture initiale ci-dessous décrivait une distribution technique réussie. L’[audit complet](docs/v1-audit.md) constate une couverture V1 incomplète et le jalon J7 d’usage réel/bêta non réalisé. L’historique est conservé ; la reprise suit le [plan de complétion](docs/v1-completion-plan.md). Les tests automatisés ne valent pas validation humaine du produit.
+
 Référence : fiche projet fournie le 13 octobre 2026. La réalisation reste une application statique, sans compte ni backend. Les validations humaines et la publication effective seront distinguées des résultats automatisés.
 
 ## Phase 0 — découverte
