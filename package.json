@@ -1,7 +1,7 @@
 {
   "name": "@komolu/web",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",

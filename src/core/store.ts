@@ -2,19 +2,20 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import type { AppState, Scene, TimerProfile, Workspace } from './model'
 import { createWorkspace, uid } from './presets'
+import { MAX_NAME_LENGTH, StateLimitError } from './limits'
 import { db, initializeDatabase, mutateState, storageMessage } from './storage'
 import { clockMovedBackwards, createTimer, reconcileTimer, transitionTimer, type TimerAction } from './timer'
 
 let onError: ((message: string) => void) | undefined
 export function reportError(error: unknown): void { onError?.(error instanceof Error ? error.message : String(error)) }
-export async function updateState(mutate: (state: AppState) => void): Promise<void> { try { await mutateState(mutate) } catch (error) { onError?.(storageMessage(error)); throw error } }
+export async function updateState(mutate: (state: AppState) => void): Promise<void> { try { await mutateState(mutate) } catch (error) { onError?.(error instanceof StateLimitError ? error.message : storageMessage(error)); throw error } }
 export function activeWorkspace(state: AppState): Workspace { return state.workspaces.find(w => w.id === state.activeWorkspaceId) ?? state.workspaces[0] }
 export const actions = {
   update: updateState,
   async workspace(mutate: (workspace: Workspace) => void) { await updateState(state => mutate(activeWorkspace(state))) },
   async switchWorkspace(id: string) { await updateState(state => { if (!state.workspaces.some(w => w.id === id)) return; state.activeWorkspaceId = id; if (state.timer.status === 'idle' || state.timer.status === 'completed') state.timer = createTimer(activeWorkspace(state).timerProfile) }) },
   async createWorkspace(scene: Scene, name?: string) { await updateState(state => { const workspace = createWorkspace(scene, name); state.workspaces.push(workspace); state.activeWorkspaceId = workspace.id; if (state.timer.status === 'idle' || state.timer.status === 'completed') state.timer = createTimer(workspace.timerProfile) }) },
-  async duplicateWorkspace() { await updateState(state => { const workspace = structuredClone(activeWorkspace(state)); workspace.id = uid(); workspace.name = `${workspace.name} · copie`; workspace.createdAt = Date.now(); state.workspaces.push(workspace); state.activeWorkspaceId = workspace.id }) },
+  async duplicateWorkspace() { await updateState(state => { const workspace = structuredClone(activeWorkspace(state)); workspace.id = uid(); workspace.name = `${workspace.name.slice(0, MAX_NAME_LENGTH - 8)} · copie`; workspace.createdAt = Date.now(); state.workspaces.push(workspace); state.activeWorkspaceId = workspace.id }) },
   async deleteWorkspace(id: string) { await updateState(state => { if (state.workspaces.length === 1) throw new Error('Garde au moins un espace.'); state.workspaces = state.workspaces.filter(w => w.id !== id); if (state.activeWorkspaceId === id) state.activeWorkspaceId = state.workspaces[0].id; if (state.timer.status === 'idle' || state.timer.status === 'completed') state.timer = createTimer(activeWorkspace(state).timerProfile) }) },
   async restoreWorkspace() { await updateState(state => { const old = activeWorkspace(state); const fresh = createWorkspace(old.background.scene, old.name); state.workspaces = state.workspaces.map(w => w.id === old.id ? { ...fresh, id: old.id, createdAt: old.createdAt } : w); if (state.timer.status === 'idle' || state.timer.status === 'completed') state.timer = createTimer(fresh.timerProfile) }) },
   async timer(action: TimerAction) { await updateState(state => { if (action === 'stop' || ((action === 'start' || action === 'resume') && state.timer.status === 'completed')) state.timer = { ...createTimer(activeWorkspace(state).timerProfile), revision: state.timer.revision + 1 }; if (action !== 'stop') state.timer = transitionTimer(state.timer, action, Date.now(), state.privateData.activeTaskId) }) },

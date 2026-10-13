@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { ArrowDown, ArrowUp, Check, Circle, MoreHorizontal, Pause, Pencil, Play, Plus, RotateCcw, SkipForward, Trash2 } from 'lucide-react'
 import type { AppState, Widget } from '../core/model'
 import { actions, useNow } from '../core/store'
 import { formatDuration, timerValue } from '../core/timer'
 import { act } from '../core/ui'
+import { NoteDraft, notesEpoch, registerNoteDraft } from '../core/notes'
+import { reportError } from '../core/store'
+import { storageMessage } from '../core/storage'
 export function ClockWidget({ widget }: { widget: Widget }) {
   const now = useNow(widget.settings.showSeconds ? 1_000 : 10_000)
   const date = new Date(now)
@@ -25,12 +28,14 @@ export function TasksWidget({ state }: { state: AppState }) {
   const data = state.privateData
   return <div className="tasks-content"><p className="eyebrow">UN PETIT PAS</p><h2>L’essentiel du jour <span className="count">{data.tasks.filter(t => t.done).length}/{data.tasks.length}</span></h2><form className="task-add" onSubmit={e => { e.preventDefault(); const submitted = draft; act(actions.addTask(submitted).then(() => setDraft(current => current === submitted ? '' : current))) }}><input aria-label="Nouvelle tâche" placeholder="Qu’as-tu en tête ?" value={draft} onChange={e => setDraft(e.target.value)} maxLength={500} /><button className="icon-button" aria-label="Ajouter la tâche" disabled={!draft.trim()}><Plus size={19} /></button></form><ul className="task-list">{data.tasks.filter(t => data.showCompleted || !t.done).map(item => <li key={item.id} className={`${item.done ? 'task-done' : ''} ${item.id === data.activeTaskId ? 'task-active' : ''}`}><div className="task-row"><button className="icon-button task-check" aria-label={item.done ? `Rouvrir ${item.title}` : `Terminer ${item.title}`} onClick={() => act(actions.toggleTask(item.id))}>{item.done ? <Check size={17} /> : <Circle size={18} />}</button>{editing === item.id ? <form className="task-rename" onSubmit={e => { e.preventDefault(); act(actions.renameTask(item.id, renamed).then(() => setEditing(null))) }}><input autoFocus aria-label="Renommer la tâche" value={renamed} maxLength={500} onChange={e => setRenamed(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setEditing(null) }} /><button className="icon-button" aria-label="Enregistrer la tâche"><Check size={16} /></button></form> : <button className="task-title" aria-pressed={item.id === data.activeTaskId} onClick={() => act(actions.selectTask(item.id === data.activeTaskId ? null : item.id))}>{item.title}</button>}<button className="icon-button task-more" aria-label={`Options de ${item.title}`} aria-expanded={expanded === item.id} onClick={() => setExpanded(expanded === item.id ? null : item.id)}><MoreHorizontal size={17} /></button></div>{expanded === item.id && <div className="task-actions"><button aria-label={`Renommer ${item.title}`} onClick={() => { setRenamed(item.title); setEditing(item.id); setExpanded(null) }}><Pencil size={14} /> Renommer</button><button aria-label={`Monter ${item.title}`} disabled={data.tasks[0].id === item.id} onClick={() => act(actions.moveTask(item.id, -1))}><ArrowUp size={15} /></button><button aria-label={`Descendre ${item.title}`} disabled={data.tasks.at(-1)?.id === item.id} onClick={() => act(actions.moveTask(item.id, 1))}><ArrowDown size={15} /></button><button aria-label={`Supprimer ${item.title}`} onClick={() => act(actions.deleteTask(item.id))}><Trash2 size={15} /></button></div>}</li>)}</ul>{data.tasks.length === 0 && <div className="empty-state"><svg viewBox="0 0 100 80" aria-hidden="true"><path d="M24 66C23 41 40 17 58 15C64 34 55 60 24 66Z" /><path d="M26 66L55 22M41 46L33 32M40 47L57 44M22 68H78" /></svg><p>Une petite intention suffit.<br />Le reste peut attendre.</p></div>}<label className="check-field task-completed"><input type="checkbox" checked={data.showCompleted} onChange={e => { const checked = e.currentTarget.checked; act(actions.update(s => { s.privateData.showCompleted = checked })) }} /> Voir les tâches terminées</label></div>
 }
-export function NotesWidget({ notes }: { notes: string }) {
-  const [draft, setDraft] = useState(notes); const [status, setStatus] = useState('')
-  const current = useRef(notes); const persisted = useRef(notes); const dirty = useRef(false); const generation = useRef(0)
-  const save = (text: string, revision: number) => actions.notes(text).then(() => { persisted.current = text; if (revision === generation.current) { dirty.current = false; setStatus('Enregistré ici') } }).catch(() => { if (revision === generation.current) setStatus('Non enregistré · réessaie ci-dessous') })
-  useEffect(() => { if (!dirty.current) { persisted.current = notes; current.current = notes; setDraft(notes) } }, [notes])
-  useEffect(() => { if (!dirty.current || draft === persisted.current) return; const revision = generation.current; const id = window.setTimeout(() => { void save(draft, revision) }, 450); return () => clearTimeout(id) }, [draft])
-  useEffect(() => () => { if (dirty.current) act(actions.notes(current.current)) }, [])
-  return <div className="notes-content"><div className="widget-heading"><p className="eyebrow">LE FIL DE TES IDÉES</p><Pencil size={15} /></div><textarea aria-label="Bloc-notes" placeholder="Un mot, une idée, un début…" value={draft} maxLength={100_000} onChange={e => { generation.current++; dirty.current = true; current.current = e.target.value; setDraft(e.target.value); setStatus('Enregistrement…') }} onBlur={() => { if (dirty.current) void save(current.current, generation.current) }} /><span className="tiny muted" role="status">{status || 'Ton carnet. Rien qu’à toi.'}</span>{status.startsWith('Non') && <button onClick={() => { void save(current.current, generation.current) }}>Réessayer l’enregistrement</button>}</div>
+export function NotesWidget({ notes, dataEpoch }: { notes: string; dataEpoch?: string }) {
+  const [controller] = useState(() => new NoteDraft(notes, notesEpoch(dataEpoch)))
+  const draft = useSyncExternalStore(controller.subscribe, controller.getSnapshot)
+  const save = () => controller.flush().catch(error => reportError(new Error(storageMessage(error))))
+  useEffect(() => { controller.receive(notes, notesEpoch(dataEpoch)) }, [controller, notes, dataEpoch])
+  useEffect(() => {
+    const unregister = registerNoteDraft(controller)
+    return () => { void controller.flush().catch(error => reportError(new Error(storageMessage(error)))); unregister() }
+  }, [controller])
+  return <div className="notes-content"><div className="widget-heading"><p className="eyebrow">LE FIL DE TES IDÉES</p><Pencil size={15} /></div><textarea aria-label="Bloc-notes" placeholder="Un mot, une idée, un début…" value={draft.text} maxLength={100_000} onChange={event => controller.edit(event.target.value)} onBlur={() => { void save() }} /><span className="tiny muted" role="status">{draft.status || 'Ton carnet. Rien qu’à toi.'}</span>{draft.status.startsWith('Non') && <button onClick={() => { void save() }}>Réessayer l’enregistrement</button>}</div>
 }

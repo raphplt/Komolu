@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { AppState, MediaRecord, StateRecord } from './model'
 import { createInitialState } from './presets'
+import { assertStateLimits } from './limits'
 
 export class KomoluDatabase extends Dexie {
   state!: EntityTable<StateRecord, 'id'>
@@ -17,6 +18,7 @@ export async function mutateState(mutate: (state: AppState) => void, database = 
     const record = await database.state.get('app')
     const state = record?.data ?? createInitialState()
     mutate(state)
+    assertStateLimits(state)
     state.updatedAt = Date.now()
     await database.state.put({ id: 'app', data: state })
   })

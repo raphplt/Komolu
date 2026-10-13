@@ -1,0 +1,15 @@
+.data-panel { display:grid; gap:18px; }
+.data-panel p { margin:0; line-height:1.65; }
+.data-action { padding:18px 0; border-top:1px solid var(--line); display:grid; gap:12px; }
+.data-action h3,.data-preview h3 { margin:0 0 7px; }
+.data-action p { font-size:14px; }
+.data-action > button { justify-self:start; }
+.data-file { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.data-error,.data-success,.data-confirm { padding:14px; border-radius:14px; background:var(--card); border:1px solid var(--line); }
+.data-error { border-color:#a34732; }
+.data-preview { display:grid; gap:16px; }
+.data-counts { display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:14px; margin:0; }
+.data-counts dt { font-size:12px; opacity:.75; }
+.data-counts dd { margin:4px 0 0; font-weight:600; }
+.data-filename { overflow-wrap:anywhere; font-size:13px; }
+.data-confirm { display:grid; gap:12px; }

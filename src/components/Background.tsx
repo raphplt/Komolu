@@ -60,7 +60,7 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
   const libraryResult = useLiveQuery(() => db.media.toArray().then(items => ({ items, error: null as string | null })).catch(() => ({ items: [], error: 'La médiathèque locale est indisponible. Vérifie les autorisations de stockage.' })), [])
   const library = libraryResult?.items
   const change = async (patch: Partial<BackgroundModel>) => {
-    try { await actions.update(state => { const target = state.workspaces.find(item => item.id === workspace.id); if (target) Object.assign(target.background, patch) }) }
+    try { await actions.update(state => { const target = state.workspaces.find(item => item.id === workspace.id); if (target) { Object.assign(target.background, patch); if (target.background.type === 'scene') delete target.background.mediaId } }) }
     catch { setError('Impossible de sauvegarder les réglages du fond.') }
   }
   const upload = async (file: File) => {

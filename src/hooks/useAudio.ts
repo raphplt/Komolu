@@ -27,16 +27,21 @@ export function useAudio(profile: AudioProfile) {
     ++operation.current; setPlaying(false); setLoading(false)
     try { if (stop) await engine.stop(); else await engine.pause() } catch { setError('Impossible de suspendre les sons. Recharge la page si le problème persiste.') }
   }, [engine])
+  useEffect(() => {
+    const stopForReplacement = () => { void halt(true) }
+    window.addEventListener('komolu-personal-data-replaced', stopForReplacement)
+    return () => window.removeEventListener('komolu-personal-data-replaced', stopForReplacement)
+  }, [halt])
   return { playing, loading, error, play, pause: () => halt(false), stop: () => halt(true), clearError: () => setError(null) }
 }
 export type AudioController = ReturnType<typeof useAudio>
 /** Initial persisted completions are a baseline, never a request to replay a chime. */
-export function useCompletionSound(timer: TimerState, enabled: boolean): void {
-  const observed = useRef({ startedAt: timer.startedAt, completed: timer.completedPhases })
+export function useCompletionSound(timer: TimerState, enabled: boolean, dataEpoch = ''): void {
+  const observed = useRef({ startedAt: timer.startedAt, completed: timer.completedPhases, dataEpoch })
   useEffect(() => {
     const previous = observed.current
-    observed.current = { startedAt: timer.startedAt, completed: timer.completedPhases }
-    if (timer.completedPhases <= previous.completed || !enabled || !timer.profile.sound || !completionSoundIsArmed()) return
+    observed.current = { startedAt: timer.startedAt, completed: timer.completedPhases, dataEpoch }
+    if (dataEpoch !== previous.dataEpoch || timer.completedPhases <= previous.completed || !enabled || !timer.profile.sound || !completionSoundIsArmed()) return
     const key = `${timer.startedAt}:${timer.completedPhases}`
     let winner = false
     void mutateState(state => {
@@ -44,5 +49,5 @@ export function useCompletionSound(timer: TimerState, enabled: boolean): void {
       if (currentKey !== key || state.timer.lastSoundKey === key) return
       state.timer.lastSoundKey = key; winner = true
     }).then(() => { if (winner) return playCompletionSound() }).catch(reportError)
-  }, [timer.startedAt, timer.completedPhases, timer.profile.sound, enabled])
+  }, [timer.startedAt, timer.completedPhases, timer.profile.sound, enabled, dataEpoch])
 }

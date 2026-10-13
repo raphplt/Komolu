@@ -14,6 +14,6 @@ export interface Task { id: string; title: string; done: boolean; createdAt: num
 export interface Thought { id: string; text: string; createdAt: number }
 export interface PrivateData { tasks: Task[]; activeTaskId: string | null; notes: string; thoughts: Thought[]; showCompleted: boolean }
 export interface Preferences { reducedMotion: boolean; focusMode: boolean; endSound: boolean; shortcuts?: boolean }
-export interface AppState { schemaVersion: typeof SCHEMA_VERSION; workspaces: Workspace[]; activeWorkspaceId: string; privateData: PrivateData; timer: TimerState; preferences: Preferences; updatedAt: number }
+export interface AppState { dataEpoch?: string; schemaVersion: typeof SCHEMA_VERSION; workspaces: Workspace[]; activeWorkspaceId: string; privateData: PrivateData; timer: TimerState; preferences: Preferences; updatedAt: number }
 export interface MediaRecord { id: string; name: string; mimeType: string; kind: 'image' | 'video' | 'audio'; size: number; blob: Blob; createdAt: number }
 export interface StateRecord { id: 'app'; data: AppState }

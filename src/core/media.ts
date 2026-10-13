@@ -1,4 +1,5 @@
 import type { MediaRecord } from './model'
+import { MAX_MEDIA_COUNT } from './limits'
 import { db, storageMessage, type KomoluDatabase } from './storage'
 
 export const MAX_MEDIA_BYTES = 50 * 1024 * 1024
@@ -70,8 +71,9 @@ export async function saveMedia(record: MediaRecord, database = db): Promise<voi
   if (record.size !== record.blob.size || record.mimeType !== record.blob.type) throw new Error('Les informations du média ne correspondent pas au fichier.')
   try {
     await database.transaction('rw', database.media, async () => {
-      let size = 0
-      await database.media.each(item => { if (item.id !== record.id) size += item.size })
+      let size = 0, count = 0
+      await database.media.each(item => { if (item.id !== record.id) { size += item.size; count++ } })
+      if (count >= MAX_MEDIA_COUNT) throw new Error(`La médiathèque est limitée à ${MAX_MEDIA_COUNT} fichiers. Supprime un média avant de continuer.`)
       if (size + record.size > MAX_LIBRARY_BYTES) throw new Error('Ta médiathèque dépasse 150 Mo. Supprime un média avant de continuer.')
       await database.media.put(record)
     })
