@@ -8,7 +8,7 @@ Un petit coin de calme, libre et personnalisable. Choisis une ambiance, pose une
 
 **V1.0.0** · [Code source](https://github.com/raphplt/Komolu) · [Installation Docker](docs/self-hosting.md) · [Contribuer](CONTRIBUTING.md)
 
-Instance publique prévue : [raphplt.github.io/Komolu](https://raphplt.github.io/Komolu/). La publication et sa vérification restent à effectuer.
+**[Ouvrir Komolu](https://raphplt.github.io/Komolu/)** — instance publique publiée le 13 octobre 2026 via GitHub Pages.
 
 ## Un espace prêt à utiliser
 

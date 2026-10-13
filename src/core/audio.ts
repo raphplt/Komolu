@@ -55,6 +55,25 @@ interface Voice {
 }
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 const signature = (track: AudioTrack) => `${track.source}:${track.mediaId ?? ''}`
+export const AUDIO_RESUME_TIMEOUT_MS = 8_000
+const AUDIO_OUTPUT_ERROR =
+  'La sortie audio est indisponible ou le navigateur bloque le son. Vérifie la sortie audio de ton appareil et les autorisations du site, puis réessaie avec Écouter.'
+/** Some browsers leave resume pending when no output device is available. */
+async function resumeAudio(context: AudioContext): Promise<void> {
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  try {
+    await Promise.race([
+      context.resume(),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => reject(new Error(AUDIO_OUTPUT_ERROR)), AUDIO_RESUME_TIMEOUT_MS)
+      }),
+    ])
+  } catch {
+    throw new Error(AUDIO_OUTPUT_ERROR)
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout)
+  }
+}
 /** One-shot AudioBufferSourceNodes are recreated on stop; gain ramps avoid discontinuities.
  * https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
  * https://developer.mozilla.org/en-US/docs/Web/API/GainNode
@@ -64,6 +83,7 @@ export class AmbientAudio {
   private master: GainNode | null = null
   private voices = new Map<string, Voice>()
   private revision = 0
+  private transportRevision = 0
   private desired = false
   private queue: Promise<void> = Promise.resolve()
   private profile: AudioProfile = { master: 0.25, muted: false, tracks: [] }
@@ -89,21 +109,32 @@ export class AmbientAudio {
   async play(profile: AudioProfile): Promise<void> {
     const context = this.initialize()
     this.desired = true
-    const revision = ++this.revision
+    this.profile = structuredClone(profile)
+    ++this.revision
+    const transport = ++this.transportRevision
     // resume is called synchronously in the original click gesture, before decoding.
     try {
-      await context.resume()
-    } catch {
-      this.desired = false
-      throw new Error('Le navigateur a bloqué le son. Réessaie avec le bouton Écouter.')
+      await resumeAudio(context)
+    } catch (error) {
+      if (transport !== this.transportRevision || context !== this.context) {
+        if (context === this.context && !this.desired) void this.dispose().catch(() => undefined)
+        return
+      }
+      // Disconnect synchronously; closing a broken device must not delay the visible error.
+      void this.dispose().catch(() => undefined)
+      throw error
     }
-    if (revision !== this.revision) return
-    await this.update(profile)
+    if (transport !== this.transportRevision || context !== this.context || !this.desired) {
+      if (context === this.context && !this.desired && context.state === 'running')
+        await context.suspend()
+      return
+    }
+    await this.update(this.profile)
   }
   async update(profile: AudioProfile): Promise<void> {
     this.profile = structuredClone(profile)
     const revision = ++this.revision
-    if (!this.desired || !this.context) return
+    if (!this.desired || !this.context || this.context.state !== 'running') return
     const task = this.queue.catch(() => undefined).then(() => this.sync(revision))
     this.queue = task
     return task
@@ -192,6 +223,7 @@ export class AmbientAudio {
     if (errors.length) throw new Error(errors.join(' '))
   }
   async pause(): Promise<void> {
+    ++this.transportRevision
     this.desired = false
     ++this.revision
     const context = this.context
@@ -206,10 +238,12 @@ export class AmbientAudio {
     for (const id of this.voices.keys()) this.retire(id, true)
   }
   async dispose(): Promise<void> {
+    ++this.transportRevision
     this.desired = false
     ++this.revision
     const context = this.context
     for (const id of this.voices.keys()) this.retire(id, true)
+    this.master?.disconnect()
     this.context = null
     this.master = null
     if (context && context.state !== 'closed') await context.close()
@@ -231,12 +265,28 @@ export const ambientAudio = new AmbientAudio()
 let chimeContext: AudioContext | null = null
 let chimeArmed = false
 let chimeVersion = 0
+function abandonChimeContext(context: AudioContext): void {
+  chimeArmed = false
+  chimeContext = null
+  ++chimeVersion
+  // No oscillators were started before resume succeeded; do not await a faulty device.
+  void context.close().catch(() => undefined)
+}
 export async function armCompletionSound(): Promise<void> {
   if (typeof AudioContext === 'undefined') return
   chimeContext ??= new AudioContext()
-  await chimeContext.resume()
+  const context = chimeContext,
+    version = ++chimeVersion
+  try {
+    await resumeAudio(context)
+  } catch (error) {
+    if (version !== chimeVersion || context !== chimeContext) return
+    abandonChimeContext(context)
+    throw error
+  }
+  if (version !== chimeVersion || context !== chimeContext) return
   chimeArmed = true
-  await chimeContext.suspend()
+  await context.suspend()
 }
 export function completionSoundIsArmed(): boolean {
   return chimeArmed
@@ -245,7 +295,14 @@ export async function playCompletionSound(): Promise<void> {
   if (!chimeArmed || !chimeContext) return
   const context = chimeContext,
     version = ++chimeVersion
-  await context.resume()
+  try {
+    await resumeAudio(context)
+  } catch (error) {
+    if (version !== chimeVersion || context !== chimeContext) return
+    abandonChimeContext(context)
+    throw error
+  }
+  if (version !== chimeVersion || context !== chimeContext) return
   for (const [frequency, offset] of [
     [523.25, 0],
     [783.99, 0.18],

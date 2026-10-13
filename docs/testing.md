@@ -28,7 +28,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:8080 npm run test:e2e
 
 ## Couverture
 
-Les **80 tests unitaires** couvrent la machine de minuterie (veille, sauts d'horloge, répétitions, profil figé), stockage atomique, limites, schéma strict, export filtré, fusion et restauration, invalidation des notes, quotas, inspection et détachement des médias, génération audio et cycles de lecture.
+Les **88 tests unitaires** couvrent la machine de minuterie (veille, sauts d'horloge, répétitions, profil figé), stockage atomique, limites, schéma strict, export filtré, fusion et restauration, invalidation des notes, quotas, inspection et détachement des médias, génération audio et cycles de lecture.
 
 Les **26 scénarios navigateur**, exécutés sur **Chromium et Firefox** (52 exécutions), couvrent les sessions/rechargements/deux onglets, changement d'espace, tâches, notes, pensées, raccourcis, Studio et clavier, préférences, mobile, import/export avec médias et refus d'entrées invalides. Les contrôles axe automatisés couvrent les trois décors et les principaux panneaux ; le focus des dialogues et l'absence de débordement mobile sont aussi vérifiés.
 

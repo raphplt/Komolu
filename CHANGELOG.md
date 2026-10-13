@@ -2,11 +2,12 @@
 
 ## 1.0.0 — 2026-10-13
 
-Première distribution complète, statique et auto-hébergeable. Publication distante en préparation.
+Première distribution complète, statique et auto-hébergeable. [Instance publique](https://raphplt.github.io/Komolu/) publiée le 13 octobre 2026.
 
 - Docker multi-stage Node/Nginx, exécution non privilégiée et lecture seule, contrôle de santé.
 - CI : formatage, lint, TypeScript, tests unitaires, Chromium et Firefox, parcours sur Nginx, puis GitHub Pages.
 - Sources formatées, licence MIT, notices complètes des dépendances et registre de ressources originales.
+- Sortie audio indisponible : chargement borné à huit secondes, erreur explicite et possibilité de réessayer.
 - Documentation de développement, auto-hébergement, confidentialité, contribution et tests ; captures des trois décors, du Studio et du mobile.
 
 La bêta humaine, Safari/iOS et l'écoute réelle des ambiances ne sont pas encore validés. PWA, synchronisation, salles, chat/voix et marque blanche à l'exécution restent hors V1.

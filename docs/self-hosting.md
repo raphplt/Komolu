@@ -51,7 +51,7 @@ Le ZIP de release statique contient les mêmes fichiers. Il ne contient pas de d
 
 Le workflow `.github/workflows/ci.yml` contrôle le format, ESLint, TypeScript, les unités et les parcours Chromium/Firefox ; il reconstruit Docker et rejoue les parcours contre Nginx. Les pull requests exécutent ces contrôles sans publier. Seuls un push sur `main` ou une exécution manuelle sur `main` peuvent publier après réussite.
 
-Avant la première publication, un administrateur doit choisir **Settings → Pages → Source: GitHub Actions**. Le job `deploy` utilise l'environnement `github-pages` et seul ce job dispose de `pages: write` et `id-token: write`. Les actions sont épinglées à un commit. L'adresse visée est [https://raphplt.github.io/Komolu/](https://raphplt.github.io/Komolu/) ; vérifier son accès et une session réelle après publication.
+Avant la première publication, un administrateur doit choisir **Settings → Pages → Source: GitHub Actions**. Le job `deploy` utilise l'environnement `github-pages` et seul ce job dispose de `pages: write` et `id-token: write`. Les actions sont épinglées à un commit. L'instance [https://raphplt.github.io/Komolu/](https://raphplt.github.io/Komolu/) est publiée depuis le 13 octobre 2026. Après chaque mise à jour, vérifier son accès et une session réelle.
 
 Référence : [Vite — déploiement statique](https://vite.dev/guide/static-deploy), consultée le 13 octobre 2026.
 
