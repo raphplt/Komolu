@@ -361,6 +361,12 @@ export function TasksWidget({ state }: { state: AppState }) {
 export function NotesWidget({ notes, dataEpoch }: { notes: string; dataEpoch?: string }) {
   const [controller] = useState(() => new NoteDraft(notes, notesEpoch(dataEpoch)))
   const draft = useSyncExternalStore(controller.subscribe, controller.getSnapshot)
+  const [dismissed, setDismissed] = useState<typeof draft | null>(null)
+  useEffect(() => {
+    if (draft.status !== 'Enregistré ici') return
+    const timeout = window.setTimeout(() => setDismissed(draft), 1_500)
+    return () => window.clearTimeout(timeout)
+  }, [draft])
   const save = () =>
     controller.flush().catch((error) => reportError(new Error(storageMessage(error))))
   useEffect(() => {
@@ -390,7 +396,7 @@ export function NotesWidget({ notes, dataEpoch }: { notes: string; dataEpoch?: s
         }}
       />
       <span className="tiny muted" role="status">
-        {draft.status}
+        {dismissed === draft ? '' : draft.status}
       </span>
       {draft.status.startsWith('Non') && (
         <button

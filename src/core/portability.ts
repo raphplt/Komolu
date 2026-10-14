@@ -85,6 +85,9 @@ export function shareWorkspace(w: Workspace): Workspace {
         w.background.type === 'image' || w.background.type === 'video'
           ? 'scene'
           : w.background.type,
+      ...(w.background.type === 'scene' && w.background.wallpaperId
+        ? { wallpaperId: w.background.wallpaperId }
+        : {}),
       solidColor: w.background.solidColor,
       gradient: { ...w.background.gradient },
       tintOpacity: w.background.tintOpacity,

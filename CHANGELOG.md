@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0-rc.2 — 2026-10-14 · candidate en validation
+
+- Galerie de fonds avec paysages, intérieurs et appartements anime, aperçus, filtres et persistance par espace. Les images intégrées restent partageables sans embarquer de média personnel.
+- Radio indépendante des ambiances : quatre stations (lofi, classique, néoclassique et chill), volume dédié, arrêt, délai de connexion borné et réessai. Aucun chargement de flux avant le clic de lecture.
+- Correction du saut initial du minuteur (50:00 → 50:01) lors du démarrage ou de la reprise entre deux rafraîchissements d’affichage.
+- Nouveau symbole Komolu : petit esprit endormi dans un croissant de lune, décliné en favicon.
+- Suppression du badge permanent de sauvegarde ; confirmation des notes temporaire et erreurs conservées.
+
+Ce lot enrichit la candidate ; il ne clôt pas les critères V1 encore ouverts dans l’audit.
+
 ## 1.1.0-rc.1 — 2026-10-13 · candidate en validation
 
 Reprise de la V1 après [audit de la livraison initiale](docs/v1-audit.md). Le numéro `1.0.0` reste historique ; il ne constituait pas une preuve de réalisation complète de la fiche produit.

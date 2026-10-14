@@ -1,10 +1,10 @@
 # Komolu
 
-Un espace de concentration personnalisable : minuterie, tâches, notes, décors et ambiances. Libre, local et sans compte.
+Un espace de concentration personnalisable : minuterie, tâches, notes, galerie de fonds, ambiances et radio. Libre, local et sans compte.
 
 ![Komolu, ambiance Minimal](docs/screenshots/minimal.png)
 
-**1.1.0-rc.1 — reprise de la V1, en validation** · [Télécharger la candidate](https://github.com/raphplt/Komolu/releases/tag/v1.1.0-rc.1) · [Code source](https://github.com/raphplt/Komolu) · [Installation Docker](docs/self-hosting.md) · [Contribuer](CONTRIBUTING.md)
+**1.1.0-rc.2 — candidate en validation** · [Dernière archive publiée (rc.1)](https://github.com/raphplt/Komolu/releases/tag/v1.1.0-rc.1) · [Code source](https://github.com/raphplt/Komolu) · [Installation Docker](docs/self-hosting.md) · [Contribuer](CONTRIBUTING.md)
 
 **[Ouvrir Komolu](https://raphplt.github.io/Komolu/)** — instance publique via GitHub Pages.
 
@@ -14,13 +14,15 @@ La livraison `1.0.0` couvrait les principaux modules, mais pas toute la profonde
 
 - Trois décors originaux : **Minimal**, **Cozy** et **Deep Work**. Crée, duplique et renomme tes propres espaces.
 - **Studio** : déplace, redimensionne et masque les widgets à la souris ou au clavier, avec résolution des chevauchements. Choisis un décor intégré, un fond uni, un dégradé ou un média local ; règle la palette indépendamment, le voile et l’horloge (format, fuseau, couleur, ombre).
+- **Galerie de fonds** : paysages, intérieurs chaleureux et appartements anime, avec aperçus et filtres. Images servies par Komolu, sans service d’images tiers ; import personnel toujours disponible. [Catalogue et provenance](docs/wallpapers.md).
+- **Radio** : Chillhop, Radio Swiss Classic, neoFM et Electronic Chillout. Lecture sur demande, arrêt et volume indépendants des ambiances ; aucune station ne démarre au chargement.
 - **Minuterie** : 25/5, 50/10, durée libre ou séquence personnalisée ; pause, reprise, répétitions et son de fin facultatif. La session survit au rechargement.
 - **Tâches, notes et pensées** : données personnelles communes à tous les espaces, sauvegardées dans ce navigateur.
 - **Ambiances** : pluie, tonnerre, vent, feu, forêt, café et vagues enregistrés, avec bruit blanc/brun synthétiques. Mixeur, volumes, mixes propres à chaque espace et sons personnels. Les fichiers redistribuables et leurs attributions accompagnent l’application.
 - **Focus** mémorisé par espace, commandes compactes, plein écran, mouvements réduits et raccourcis désactivables. L’interface privilégie les libellés utiles.
 - **Sauvegarde complète** et **partage d'espace** : deux exports distincts ; un espace partagé n'emporte ni tâches, ni notes, ni pensées, ni médias personnels.
 
-[Cozy](docs/screenshots/cozy.png) · [Deep Work](docs/screenshots/deep.png) · [Studio](docs/screenshots/studio.png) · [Focus](docs/screenshots/focus.png) · [Mobile](docs/screenshots/mobile.png)
+[Galerie](docs/screenshots/gallery.png) · [Fond anime](docs/screenshots/anime.png) · [Radio sur mobile](docs/screenshots/radio-mobile.png) · [Cozy](docs/screenshots/cozy.png) · [Deep Work](docs/screenshots/deep.png) · [Studio](docs/screenshots/studio.png) · [Focus](docs/screenshots/focus.png) · [Mobile](docs/screenshots/mobile.png)
 
 ## Démarrer en développement
 
@@ -59,7 +61,7 @@ Ouvre [127.0.0.1:8080](http://127.0.0.1:8080). Aucun compte, base de données ou
 
 ## Tes données restent dans ton navigateur
 
-Komolu ne contient ni analytics, ni télémétrie, ni appel à une API distante. L'hébergeur sert les fichiers et peut disposer de journaux HTTP ordinaires ; tes notes et médias ne lui sont pas envoyés. IndexedDB conserve les données par **origine** (protocole + hôte + port) et profil de navigateur. Changer d'instance, de navigateur ou de port crée un autre stockage. Effacer les données du navigateur peut tout supprimer.
+Komolu ne contient ni analytics ni télémétrie. Les fonds et ambiances intégrés viennent du même hébergement que l’application. La radio est facultative : cliquer sur Écouter contacte la station et son hébergeur, qui reçoivent les informations habituelles d’une connexion HTTP (dont l’adresse IP). Elle nécessite Internet et peut diffuser des publicités. L'hébergeur sert les fichiers et peut disposer de journaux HTTP ordinaires ; tes notes et médias ne lui sont pas envoyés. IndexedDB conserve les données par **origine** (protocole + hôte + port) et profil de navigateur. Changer d'instance, de navigateur ou de port crée un autre stockage. Effacer les données du navigateur peut tout supprimer.
 
 **Télécharge régulièrement une sauvegarde** depuis Préférences → Sauvegarde et données. Le fichier JSON contient données et médias, n'est pas chiffré et peut devenir volumineux (base64). Limites : 50 Mio par média, 150 Mio de médias au total, 220 Mio par fichier d'import ; sons personnels limités à 120 secondes et 2 canaux. Les détails de validation, fusion et remplacement sont dans [Portabilité](docs/portability.md) et [Médias](docs/media.md).
 

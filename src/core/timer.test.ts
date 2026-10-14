@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   clockMovedBackwards,
   createTimer,
+  formatDuration,
   reconcileTimer,
   timerValue,
   transitionTimer,
@@ -22,6 +23,16 @@ const profile: TimerProfile = {
   sound: false,
 }
 describe('deadline timer', () => {
+  it('never adds a second when the render clock predates start or resume', () => {
+    const started = transitionTimer(createTimer(TIMER_PROFILES[1], 0), 'start', 1_250)
+    expect(formatDuration(timerValue(started, 1_000))).toBe('50:00')
+    expect(formatDuration(timerValue(started, 1_250))).toBe('50:00')
+    expect(formatDuration(timerValue(started, 2_250))).toBe('49:59')
+    const paused = transitionTimer(started, 'pause', 2_500)
+    const resumed = transitionTimer(paused, 'resume', 10_500)
+    expect(timerValue(resumed, 10_000)).toBe(paused.remainingMs)
+    expect(timerValue(resumed, 11_500)).toBe(paused.remainingMs - 1_000)
+  })
   it('survives serialization and calculates remaining time without interval counting', () => {
     const running = transitionTimer(createTimer(profile, 1_000), 'start', 1_000)
     const restored = JSON.parse(JSON.stringify(running))

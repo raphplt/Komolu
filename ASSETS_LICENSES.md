@@ -2,16 +2,16 @@
 
 Le code et les ressources originales de Komolu sont distribués sous [MIT](LICENSE), copyright 2026 Komolu contributors. Les dépendances gardent leurs licences respectives. Le nom Komolu reste un nom de travail : aucune garantie de disponibilité de marque ou de domaine n'est donnée.
 
-| Ressource distribuée                           | Origine / auteur                                                                | Licence et modifications                                                                                     |
-| ---------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Scènes Minimal, Cozy et Deep Work              | Créations SVG/CSS pour Komolu, `src/components/Scene.tsx` et `src/styles.css`   | MIT ; aucun fond photographique tiers                                                                        |
-| Bruits brun et blanc                           | Synthèse originale Komolu dans `src/core/audio.ts`                              | MIT ; génération locale de bruit                                                                             |
-| Son de fin de phase                            | Synthèse originale Komolu dans `src/core/audio.ts`                              | MIT                                                                                                          |
-| Interface, textes et captures de démonstration | Komolu contributors                                                             | MIT ; captures de l'application avec données fictives                                                        |
-| Icônes de l'interface                          | [Lucide](https://github.com/lucide-icons/lucide), paquet `lucide-react` 0.468.0 | ISC ; contient des portions [Feather](https://github.com/feathericons/feather) sous MIT ; notices conservées |
-| Vidéo de test `e2e/fixtures/quiet-sage.webm`   | Création FFmpeg, fond uni sauge silencieux, 64 × 64 pixels / 2 secondes         | MIT ; fixture originale, hors build de production                                                            |
-| Favicon feuille `public/favicon.svg`           | Création vectorielle originale Komolu                                           | MIT                                                                                                          |
-| Typographie                                    | Polices déjà présentes sur le système du visiteur                               | Aucun fichier de police distribué ni chargé à distance                                                       |
+| Ressource distribuée                             | Origine / auteur                                                                | Licence et modifications                                                                                     |
+| ------------------------------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Scènes Minimal, Cozy et Deep Work                | Créations SVG/CSS pour Komolu, `src/components/Scene.tsx` et `src/styles.css`   | MIT ; aucun fond photographique tiers                                                                        |
+| Bruits brun et blanc                             | Synthèse originale Komolu dans `src/core/audio.ts`                              | MIT ; génération locale de bruit                                                                             |
+| Son de fin de phase                              | Synthèse originale Komolu dans `src/core/audio.ts`                              | MIT                                                                                                          |
+| Interface, textes et captures de démonstration   | Komolu contributors                                                             | MIT ; captures de l'application avec données fictives                                                        |
+| Icônes de l'interface                            | [Lucide](https://github.com/lucide-icons/lucide), paquet `lucide-react` 0.468.0 | ISC ; contient des portions [Feather](https://github.com/feathericons/feather) sous MIT ; notices conservées |
+| Vidéo de test `e2e/fixtures/quiet-sage.webm`     | Création FFmpeg, fond uni sauge silencieux, 64 × 64 pixels / 2 secondes         | MIT ; fixture originale, hors build de production                                                            |
+| Logo esprit/lune et favicon `public/favicon.svg` | Création vectorielle originale Komolu                                           | MIT                                                                                                          |
+| Typographie                                      | Polices déjà présentes sur le système du visiteur                               | Aucun fichier de police distribué ni chargé à distance                                                       |
 
 Les images, vidéos et sons importés par un utilisateur restent dans son navigateur et ne font pas partie de cette distribution. L'export d'espace retire systématiquement ces médias. Une sauvegarde personnelle les contient : leur réutilisation relève des droits de leur propriétaire.
 
@@ -34,3 +34,7 @@ Les sept fichiers `public/audio/*.flac` sont dérivés des previews MP3 publics 
 | thunder  | [230823 Thunder, dry distant rolling, R-07 EM272s, Stratford 12pm by TRP](https://freesound.org/people/TRP/sounds/717890/) — TRP | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
 Modifications : extrait de 22 s, rééchantillonnage stéréo 32 kHz, retrait DC, recouvrement égal-puissance de 2 s, limitation douce des crêtes, niveau RMS −22 dBFS, FLAC 16 bits de 20 s. [Crédits distribués](public/audio/CREDITS.txt), [manifest et empreintes SHA-256](public/audio/manifest.json), [recette de préparation](scripts/audio/README.md). La source café contient un fond de conversations : l’absence de paroles intelligibles nécessite une validation à l’écoute ; elle n’est pas déduite de la langue parlée.
+
+## Galerie de fonds
+
+Les huit fonds dans `public/wallpapers` sont des créations originales assistées par IA, générées avec l’outil intégré image_gen le 14 octobre 2026 pour Komolu, sans image de référence tierce. Ils sont distribués avec le projet sous MIT. Les prompts complets, chemins des originaux et fichiers de diffusion sont documentés dans [docs/wallpapers.md](docs/wallpapers.md). Les images WebP et leurs miniatures sont livrées localement avec l’application ; aucun CDN tiers n’est utilisé pour cette galerie.

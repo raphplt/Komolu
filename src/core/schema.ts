@@ -1,3 +1,4 @@
+import { WALLPAPERS } from './wallpapers'
 import type { AppState, MediaRecord, TimerProfile, TimerState, Widget, Workspace } from './model'
 import { MEDIA_TYPES, MAX_LIBRARY_BYTES, MAX_MEDIA_BYTES } from './media'
 import {
@@ -193,8 +194,16 @@ export function validateWorkspace(value: unknown, path = 'espace'): asserts valu
     w.background,
     `${path}.fond`,
     ['scene', 'type', 'dim', 'blur', 'position', 'color', 'solidColor', 'gradient', 'tintOpacity'],
-    ['mediaId'],
+    ['mediaId', 'wallpaperId'],
   )
+  if ('wallpaperId' in b) {
+    choice(
+      b.wallpaperId,
+      WALLPAPERS.map((wallpaper) => wallpaper.id),
+      `${path}.galerie`,
+    )
+    if (b.type !== 'scene') invalid(path, 'fond de galerie incompatible')
+  }
   choice(b.scene, ['minimal', 'cozy', 'deep'], path)
   choice(b.type, ['scene', 'solid', 'gradient', 'image', 'video'], path)
   number(b.dim, path, 0, 1)

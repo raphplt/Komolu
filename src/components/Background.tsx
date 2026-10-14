@@ -5,6 +5,8 @@ import type { Background as BackgroundModel, Scene, Workspace } from '../core/mo
 import { db } from '../core/storage'
 import { deleteMedia, importMedia, mediaAccept, MAX_LIBRARY_BYTES } from '../core/media'
 import { actions } from '../core/store'
+import { Dialog } from './shared'
+import { WALLPAPERS, wallpaperById, wallpaperUrl } from '../core/wallpapers'
 import './media.css'
 
 function LocalBackground({
@@ -93,6 +95,26 @@ function LocalBackground({
     />
   )
 }
+function GalleryBackground({ background }: { background: BackgroundModel }) {
+  const [failed, setFailed] = useState(false)
+  const wallpaper = wallpaperById(background.wallpaperId)
+  if (!wallpaper) return null
+  if (failed)
+    return (
+      <span className="background-error" role="status">
+        Fond indisponible. Le décor intégré prend le relais.
+      </span>
+    )
+  return (
+    <img
+      className="local-background-media"
+      src={wallpaperUrl(wallpaper.id)}
+      alt=""
+      style={{ objectFit: 'cover', objectPosition: background.position }}
+      onError={() => setFailed(true)}
+    />
+  )
+}
 export function Background({
   workspace,
   reducedMotion,
@@ -124,6 +146,9 @@ export function Background({
         ) : (
           children
         )}
+        {background.type === 'scene' && background.wallpaperId && (
+          <GalleryBackground key={background.wallpaperId} background={background} />
+        )}
         {(background.type === 'image' || background.type === 'video') && (
           <LocalBackground
             key={`${background.mediaId}:${background.type}`}
@@ -142,6 +167,8 @@ export function Background({
   )
 }
 export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  const [category, setCategory] = useState<'all' | 'landscapes' | 'interiors' | 'anime'>('all')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -158,17 +185,22 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
   )
   const library = libraryResult?.items
   const change = async (patch: Partial<BackgroundModel>) => {
+    setError(null)
     try {
       await actions.update((state) => {
         const target = state.workspaces.find((item) => item.id === workspace.id)
         if (target) {
           Object.assign(target.background, patch)
+          if (target.background.type !== 'scene' || ('scene' in patch && !('wallpaperId' in patch)))
+            delete target.background.wallpaperId
           if (target.background.type !== 'image' && target.background.type !== 'video')
             delete target.background.mediaId
         }
       })
+      return true
     } catch {
       setError('Impossible de sauvegarder les réglages du fond.')
+      return false
     }
   }
   const upload = async (file: File) => {
@@ -198,6 +230,75 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
   const used = library?.reduce((sum, record) => sum + record.size, 0) ?? 0
   return (
     <div className="background-settings">
+      <button className="wallpaper-gallery-open" onClick={() => setGalleryOpen(true)}>
+        <img
+          src={wallpaperUrl(
+            wallpaperById(workspace.background.wallpaperId)?.id ?? 'rainy-loft',
+            true,
+          )}
+          alt=""
+          loading="lazy"
+        />
+        <span>
+          <strong>Galerie de fonds</strong>
+          <small>Paysages · Intérieurs · Anime</small>
+        </span>
+      </button>
+      {galleryOpen && (
+        <Dialog title="Galerie de fonds" wide onClose={() => setGalleryOpen(false)}>
+          <div className="wallpaper-filters" role="group" aria-label="Catégories de fonds">
+            {(
+              [
+                ['all', 'Tous'],
+                ['landscapes', 'Paysages'],
+                ['interiors', 'Intérieurs'],
+                ['anime', 'Anime'],
+              ] as const
+            ).map(([id, name]) => (
+              <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>
+                {name}
+              </button>
+            ))}
+          </div>
+          <div className="wallpaper-grid">
+            {WALLPAPERS.filter(
+              (wallpaper) => category === 'all' || wallpaper.category === category,
+            ).map((wallpaper) => (
+              <button
+                className="wallpaper-card"
+                key={wallpaper.id}
+                aria-label={`Choisir ${wallpaper.name}`}
+                aria-pressed={
+                  workspace.background.type === 'scene' &&
+                  workspace.background.wallpaperId === wallpaper.id
+                }
+                disabled={busy}
+                onClick={() => {
+                  setBusy(true)
+                  void change({ type: 'scene', wallpaperId: wallpaper.id }).then((saved) => {
+                    setBusy(false)
+                    if (saved) setGalleryOpen(false)
+                  })
+                }}
+              >
+                <img
+                  src={wallpaperUrl(wallpaper.id, true)}
+                  alt=""
+                  loading="lazy"
+                  width="480"
+                  height="270"
+                />
+                <span>{wallpaper.name}</span>
+              </button>
+            ))}
+          </div>
+          {error && (
+            <p className="media-error" role="alert">
+              {error}
+            </p>
+          )}
+        </Dialog>
+      )}
       <label>
         Type de fond
         <select
@@ -222,7 +323,9 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
         </select>
       </label>
       <label>
-        {workspace.background.type === 'scene' ? 'Scène' : 'Scène de secours'}
+        {workspace.background.type === 'scene' && !workspace.background.wallpaperId
+          ? 'Scène'
+          : 'Scène de secours'}
         <select
           aria-label="Scène"
           value={workspace.background.scene}
@@ -328,10 +431,12 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
       <p className="media-hint">
         JPEG, PNG, WebP, AVIF · MP4, WebM, OGG. 50 Mo par fichier, stocké uniquement ici.
       </p>
-      {(workspace.background.type === 'image' || workspace.background.type === 'video') && (
+      {(workspace.background.type === 'image' ||
+        workspace.background.type === 'video' ||
+        workspace.background.wallpaperId) && (
         <button
           className="text-button"
-          onClick={() => void change({ type: 'scene', mediaId: undefined })}
+          onClick={() => void change({ type: 'scene', scene: workspace.background.scene })}
         >
           Revenir au décor intégré
         </button>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowUpRight,
-  Check,
+  Radio,
   ChevronDown,
   Expand,
   Leaf,
@@ -22,6 +22,9 @@ import { formatDuration, timerValue } from './core/timer'
 import { armCompletionSound } from './core/audio'
 import { useAudio, useCompletionSound } from './hooks/useAudio'
 import { Background } from './components/Background'
+import { Logo } from './components/Logo'
+import { useRadio } from './hooks/useRadio'
+import { RadioPanel } from './components/RadioPanel'
 import { AudioPanel } from './components/AudioPanel'
 import { ClockWidget, NotesWidget, TasksWidget, TimerWidget } from './components/Widgets'
 import { Studio, WidgetFrame } from './components/Studio'
@@ -31,7 +34,7 @@ import { DataPanel } from './components/DataPanel'
 import { Scene } from './components/Scene'
 import { Dialog } from './components/shared'
 import { act } from './core/ui'
-type Panel = 'workspaces' | 'timer' | 'thoughts' | 'preferences' | 'data' | 'audio' | null
+type Panel = 'workspaces' | 'timer' | 'thoughts' | 'preferences' | 'data' | 'audio' | 'radio' | null
 export default function App() {
   const { state, error, clearError } = useAppState()
   if (!state)
@@ -55,6 +58,7 @@ function Experience({
 }) {
   const workspace = activeWorkspace(state)
   const audio = useAudio(workspace.audio)
+  const radio = useRadio(state.dataEpoch)
   useCompletionSound(state.timer, true, state.dataEpoch)
   const [panel, setPanel] = useState<Panel>(null)
   const [studio, setStudio] = useState(false)
@@ -146,10 +150,7 @@ function Experience({
             )
           }}
         >
-          <span className="brand-mark">
-            <Leaf size={23} strokeWidth={1.5} />
-          </span>
-          komolu
+          <Logo />
         </a>
         <div className="header-actions">
           <button className="workspace-switch" onClick={() => setPanel('workspaces')}>
@@ -228,11 +229,6 @@ function Experience({
             </button>
           </div>
         )}
-        <div className="desk-caption">
-          <span>
-            <Check size={12} /> Enregistré dans ce navigateur
-          </span>
-        </div>
       </div>
       {!focus && (
         <footer className="bottom-bar">
@@ -250,6 +246,17 @@ function Experience({
                   <i />
                   <i />
                 </span>
+              )}
+            </button>
+            <button
+              className="dock-radio"
+              aria-label="Ouvrir la radio"
+              onClick={() => setPanel('radio')}
+            >
+              <Radio size={18} />
+              <span>Radio</span>
+              {(radio.status === 'playing' || radio.status === 'loading') && (
+                <span className="radio-live-dot" aria-label="Radio active" />
               )}
             </button>
             <span className="dock-divider" />
@@ -310,6 +317,8 @@ function Experience({
         <FocusToolbar
           state={state}
           playing={audio.playing}
+          radioActive={radio.status === 'playing' || radio.status === 'loading'}
+          onRadio={() => setPanel('radio')}
           onToggle={toggleTimer}
           onAudio={() => setPanel('audio')}
           onThought={() => setPanel('thoughts')}
@@ -324,6 +333,11 @@ function Experience({
         <PreferencesDialog state={state} onClose={close} onData={() => setPanel('data')} />
       )}
       {panel === 'data' && <DataPanel onClose={close} />}
+      {panel === 'radio' && (
+        <Dialog title="Radio" onClose={close}>
+          <RadioPanel radio={radio} ambientPlaying={audio.playing} />
+        </Dialog>
+      )}
       {panel === 'audio' && (
         <Dialog title="Ambiances" onClose={close}>
           <AudioPanel workspace={workspace} audio={audio} />
@@ -339,6 +353,8 @@ function PlusIcon() {
 function FocusToolbar({
   state,
   playing,
+  radioActive,
+  onRadio,
   onToggle,
   onAudio,
   onThought,
@@ -347,6 +363,8 @@ function FocusToolbar({
 }: {
   state: AppState
   playing: boolean
+  radioActive: boolean
+  onRadio: () => void
   onToggle: () => void
   onAudio: () => void
   onThought: () => void
@@ -372,6 +390,10 @@ function FocusToolbar({
         onClick={onAudio}
       >
         {playing ? <Volume2 size={18} /> : <VolumeX size={18} />}
+      </button>
+      <button className="icon-button" aria-label="Ouvrir la radio" title="Radio" onClick={onRadio}>
+        <Radio size={18} />
+        {radioActive && <span className="radio-live-dot" aria-label="Radio active" />}
       </button>
       <button
         className="icon-button"

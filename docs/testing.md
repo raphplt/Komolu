@@ -42,7 +42,7 @@ La candidate `1.1.0-rc.1` ajoute notamment :
 
 La [CI de publication](https://github.com/raphplt/Komolu/actions/workflows/ci.yml) rejoue les contrôles sur le commit poussé avant déploiement. Une vérification HTTP et navigateur sur l’URL publique reste distincte des résultats locaux.
 
-Les tests de production surveillent erreurs JavaScript/console, violations de CSP et requêtes extérieures à l'origine. Une vidéo WebM fictive locale est importée, lue muette, pausée avec la réduction des mouvements puis retrouvée après reload. Les images PNG et sons WAV sont également décodés par les navigateurs dans les parcours de portabilité. Les fixtures sont fabriquées pour les tests, sans données personnelles.
+Les parcours locaux de production surveillent erreurs JavaScript/console, violations de CSP et absence de requêtes extérieures à l’origine avant activation de la radio. Une vidéo WebM fictive locale est importée, lue muette, pausée avec la réduction des mouvements puis retrouvée après reload. Les images PNG et sons WAV sont également décodés par les navigateurs dans les parcours de portabilité. Les fixtures sont fabriquées pour les tests, sans données personnelles.
 
 Les captures de `docs/screenshots/` montrent l'application réelle avec tâches et notes fictives dans un contexte jetable. Elles ne sont ni des maquettes, ni la capture du navigateur personnel d'un utilisateur.
 
@@ -62,3 +62,11 @@ Les résultats détaillés de livraison sont consignés dans le plan d'implémen
 La candidate reste à faire essayer par 5 à 10 personnes, avec mesure du temps jusqu’à la première session, plusieurs sessions réelles, retours sur la composition d’espace et écoute des boucles. Safari/iOS, un lecteur d’écran et des appareils de puissance modeste doivent figurer parmi les essais. Une réussite technique ne ferme pas ces critères ; le statut « en validation » doit rester visible tant qu’ils ne sont pas satisfaits. Les autres écarts encore ouverts, dont le poster vidéo dédié et les points de documentation/gouvernance, restent suivis dans la matrice d’audit ; la réussite de cette suite ne vaut pas couverture complète de la fiche V1.
 
 Pendant des vérifications parallèles, utilise un répertoire de sortie distinct par exécution (`npx playwright test --output=artifacts/e2e-mon-lot --reporter=line`) pour éviter qu’un lancement ne nettoie les traces d’un autre.
+
+## Lot galerie, radio et corrections du 14 octobre 2026
+
+La candidate `1.1.0-rc.2` ajoute la validation du catalogue de fonds et de ses exports, le chargement réel et le repli des images dans Chromium/Firefox, la navigation mobile et clavier, ainsi que le démarrage/reprise du minuteur entre deux rafraîchissements. Le badge de sauvegarde permanent est absent et la confirmation des notes disparaît après enregistrement sans perdre le contenu au rechargement.
+
+Les tests radio unitaires et les parcours `e2e/radio.spec.ts` utilisent un transport simulé pour vérifier les transitions, erreurs, arrêt et préférences de façon déterministe. Ils ne prouvent pas la disponibilité ou le décodage d’un flux radio externe ; les vérifications des flux réels sont consignées séparément dans [Radio](radio.md). Tous les navigateurs restent muets.
+
+**Résultat local du lot rc.2 : 136 tests unitaires réussis ; 90 exécutions navigateur sur Chromium et Firefox en développement, puis 28 exécutions ciblées sur Docker/Nginx (galerie, radio, minuterie, accessibilité et production), toutes réussies sans retry.** Formatage, ESLint, TypeScript et build passent. La première tentative de suite dev a été interrompue par l’arrêt du serveur partagé ; les 90 réussites proviennent d’une nouvelle exécution complète sur un serveur dédié. Les quatre stations ont également atteint `playing` dans Chromium sur Docker avec zéro erreur CSP/JavaScript, avant arrêt et fermeture du navigateur muet. La suite production complète reste exécutée par la CI de publication.

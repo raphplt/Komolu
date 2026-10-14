@@ -1,6 +1,6 @@
 # Auto-hébergement
 
-Komolu est un site statique. La version `1.1.0-rc.1` est une candidate de reprise de la V1, en validation. Les données personnelles vivent dans IndexedDB sur le navigateur de chaque utilisateur. Sauvegarder le conteneur ne sauvegarde donc aucune tâche, note ou média utilisateur.
+Komolu est un site statique. La version `1.1.0-rc.2` est une candidate de reprise de la V1, en validation. Les données personnelles vivent dans IndexedDB sur le navigateur de chaque utilisateur. Sauvegarder le conteneur ne sauvegarde donc aucune tâche, note ou média utilisateur.
 
 ## Docker Compose
 
@@ -34,7 +34,7 @@ Le conteneur ne stocke pas les données personnelles. Lors de la prochaine ouver
 
 HTTPS est nécessaire hors localhost (notamment pour `crypto.randomUUID` et le presse-papiers) : une URL HTTP sur une adresse LAN ne constitue pas une installation prise en charge. Utilise un domaine et un reverse proxy HTTPS devant `127.0.0.1:8080`. Le proxy doit pouvoir joindre la boucle locale de l'hôte ; un proxy lui-même conteneurisé doit plutôt partager un réseau Docker avec Komolu et joindre son port interne 8080. Ne publie pas le serveur de développement Vite en production.
 
-Nginx fournit une CSP, `nosniff`, `Referrer-Policy: no-referrer` et refuse l'affichage en iframe. Les styles inline sont autorisés pour les réglages React ; les médias `blob:` locaux sont autorisés. Les fichiers versionnés sous `/assets/` sont mis en cache pour un an ; le HTML et les notices demandent une revalidation. Le HTTPS/HSTS se configure au niveau du reverse proxy. GitHub Pages n'utilise pas ce Nginx et ne reçoit donc pas ces en-têtes personnalisés.
+Nginx fournit une CSP, `nosniff`, `Referrer-Policy: no-referrer` et refuse l'affichage en iframe. Les styles inline sont autorisés pour les réglages React ; les médias `blob:` locaux sont autorisés. `media-src` autorise également les hôtes des quatre radios et leurs relais ; aucun domaine radio n’est autorisé pour les scripts ou requêtes applicatives. Une station qui change d’hôte de diffusion peut nécessiter une mise à jour de cette liste. Les fichiers versionnés sous `/assets/` sont mis en cache pour un an ; le HTML et les notices demandent une revalidation. Le HTTPS/HSTS se configure au niveau du reverse proxy. GitHub Pages n'utilise pas ce Nginx et ne reçoit donc pas ces en-têtes personnalisés.
 
 ## Hébergement statique et sous-chemin
 
@@ -57,4 +57,4 @@ Référence : [Vite — déploiement statique](https://vite.dev/guide/static-dep
 
 ## Limites
 
-Il n'existe ni API de santé des données, ni restauration côté serveur, ni synchronisation. La minuterie et les données d’une application déjà chargée peuvent continuer sans réseau, mais aucun service worker ne garantit un nouveau chargement hors ligne. Un enregistrement audio qui n’a pas encore été chargé peut rester indisponible sans réseau ; les bruits synthétiques et médias personnels déjà accessibles restent locaux. Le mode privé du navigateur peut effacer son stockage en fin de session. Les réglages et médias restent propres à chaque origine.
+Il n'existe ni API de santé des données, ni restauration côté serveur, ni synchronisation. La minuterie et les données d’une application déjà chargée peuvent continuer sans réseau, mais aucun service worker ne garantit un nouveau chargement hors ligne. Un enregistrement audio qui n’a pas encore été chargé peut rester indisponible sans réseau ; les bruits synthétiques et médias personnels déjà accessibles restent locaux. La radio demande une connexion continue à une station externe. Le mode privé du navigateur peut effacer son stockage en fin de session. Les réglages et médias restent propres à chaque origine.

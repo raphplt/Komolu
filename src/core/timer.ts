@@ -91,7 +91,9 @@ export function timerValue(timer: TimerState, now: number): number {
         : 0)
     )
   return timer.status === 'running' && timer.deadline !== null
-    ? Math.max(0, timer.deadline - now)
+    ? // A component's ticking clock can still be from before the click that started
+      // this run. It must never display more than the duration saved at start/resume.
+      Math.max(0, Math.min(timer.remainingMs, timer.deadline - now))
     : timer.remainingMs
 }
 function advance(timer: TimerState, now: number, running: boolean): TimerState {

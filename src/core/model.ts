@@ -1,3 +1,4 @@
+import type { WallpaperId } from './wallpapers'
 export const SCHEMA_VERSION = 2 as const
 export type Scene = 'minimal' | 'cozy' | 'deep'
 export type WidgetType = 'clock' | 'timer' | 'tasks' | 'notes' | 'audio'
@@ -68,6 +69,7 @@ export interface AudioProfile {
   tracks: AudioTrack[]
 }
 export interface Background {
+  wallpaperId?: WallpaperId
   scene: Scene
   type: 'scene' | 'solid' | 'gradient' | 'image' | 'video'
   solidColor: string

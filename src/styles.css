@@ -180,13 +180,17 @@ hr {
   gap: 10px;
 }
 .brand-mark {
-  width: 33px;
-  height: 33px;
-  background: var(--accent-soft);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  transform: rotate(-12deg);
+  width: 48px;
+  height: 48px;
+  flex: none;
+  overflow: visible;
+}
+.brand-wordmark {
+  font-weight: 600;
+  letter-spacing: -1.8px;
+}
+.brand-dot {
+  color: var(--accent);
 }
 .header-actions {
   display: flex;
@@ -607,19 +611,6 @@ hr {
 .notes-content .tiny {
   margin-top: 10px;
   font-size: 8px;
-}
-.desk-caption {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 19px 4px 0;
-  font-size: 9px;
-  color: var(--muted);
-}
-.desk-caption span:first-child {
-  display: flex;
-  gap: 5px;
-  align-items: center;
 }
 .bottom-bar {
   position: fixed;
@@ -1127,8 +1118,7 @@ kbd {
   background: var(--ink);
 }
 .focus-mode .app-header,
-.focus-mode .workspace-heading,
-.focus-mode .desk-caption {
+.focus-mode .workspace-heading {
   display: none;
 }
 .focus-mode .workspace-body {
@@ -1203,8 +1193,8 @@ kbd {
     gap: 6px;
   }
   .brand-mark {
-    width: 29px;
-    height: 29px;
+    width: 40px;
+    height: 40px;
   }
   .header-actions {
     gap: 3px;
@@ -1286,10 +1276,6 @@ kbd {
   }
   .notes-content {
     padding: 25px;
-  }
-  .desk-caption {
-    justify-content: center;
-    margin-top: 20px;
   }
   .bottom-bar {
     bottom: 15px;
@@ -1420,18 +1406,9 @@ kbd {
   color: #283d31;
   --border: #57694340;
 }
-.scene-cozy .brand-mark {
-  background: #eff0d9;
-  color: #334b3b;
-}
-.scene-cozy .desk-caption,
-.scene-deep .desk-caption {
-  color: #f1efe5;
-  background: rgba(30, 40, 34, 0.8);
-  padding: 8px 12px;
-  border-radius: 7px;
-  width: fit-content;
-  gap: 25px;
+.scene-deep .brand-mark {
+  --logo-moon: #e3bf81;
+  --logo-ink: #536950;
 }
 .scene-cozy .dialog .primary,
 .scene-deep .dialog .primary {
@@ -1542,4 +1519,30 @@ kbd {
   width: 100%;
   resize: vertical;
   min-height: 70px;
+}
+
+/* Keep header controls readable over user-selected imagery and colours. */
+.app:has(.local-background-media, .generated-background) .brand,
+.app:has(.local-background-media, .generated-background) .workspace-switch,
+.app:has(.local-background-media, .generated-background) .studio-button {
+  background: var(--panel);
+  border-radius: 12px;
+  color: var(--ink);
+}
+.app:has(.local-background-media, .generated-background) .brand {
+  padding: 2px 10px 2px 4px;
+}
+@media (max-width: 420px) {
+  .app-header {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .header-actions {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .workspace-switch {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 }
