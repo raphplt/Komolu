@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('starting and resuming between display ticks never adds a second', async ({ page }) => {
+test('starting and resuming shows the first elapsed second promptly', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-14T10:00:00Z') })
   await page.goto('/')
   await page.getByRole('button', { name: 'Minimal', exact: true }).click()
@@ -12,7 +12,7 @@ test('starting and resuming between display ticks never adds a second', async ({
   await page.getByRole('button', { name: 'Démarrer', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible()
   await expect(timer).toHaveText('50:00')
-  await page.clock.runFor(2_000)
+  await page.clock.runFor(1_100)
   await expect(timer).toHaveText('49:59')
   await page.getByRole('button', { name: 'Pause', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Reprendre', exact: true })).toBeVisible()
@@ -21,6 +21,8 @@ test('starting and resuming between display ticks never adds a second', async ({
   await page.getByRole('button', { name: 'Reprendre', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible()
   await expect(timer).toHaveText(paused!)
+  await page.clock.runFor(1_100)
+  await expect(timer).toHaveText('49:58')
 })
 
 test('save feedback is brief while notes remain saved after reload', async ({ page }) => {

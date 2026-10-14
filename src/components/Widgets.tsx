@@ -94,8 +94,8 @@ export function TimerWidget({
   onSettings: () => void
   onToggle: () => void
 }) {
-  const now = useNow()
   const timer = state.timer
+  const now = useNow(timer.status === 'running' ? 100 : 1_000)
   const phase = timer.profile.phases[timer.phaseIndex]
   const value = timerValue(timer, now)
   const running = timer.status === 'running'
@@ -107,7 +107,7 @@ export function TimerWidget({
   return (
     <div className="timer-content">
       <div className="timer-top">
-        <span className="eyebrow">Minuterie</span>
+        <h2>Minuterie</h2>
         <button className="icon-button" aria-label="Régler la minuterie" onClick={onSettings}>
           <MoreHorizontal size={20} />
         </button>

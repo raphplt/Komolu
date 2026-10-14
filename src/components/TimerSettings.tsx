@@ -1,3 +1,4 @@
+import { Select } from './Select'
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import type { TimerProfile } from '../core/model'
@@ -42,18 +43,19 @@ export function TimerSettings({
       </label>
       <label className="field">
         Mode
-        <select
+        <Select
+          aria-label="Mode"
           value={draft.mode}
-          onChange={(e) =>
+          onChange={(value) =>
             setDraft({
               ...draft,
-              mode: e.target.value as TimerProfile['mode'],
+              mode: value as TimerProfile['mode'],
               phases: [
                 {
                   id: uid(),
                   label: 'Concentration',
                   kind: 'work',
-                  durationMs: e.target.value === 'free' ? 0 : 25 * 60_000,
+                  durationMs: value === 'free' ? 0 : 25 * 60_000,
                 },
               ],
             })
@@ -61,7 +63,7 @@ export function TimerSettings({
         >
           <option value="sequence">Séquence</option>
           <option value="free">Session libre</option>
-        </select>
+        </Select>
       </label>
       {draft.mode === 'sequence' && (
         <>
@@ -82,22 +84,22 @@ export function TimerSettings({
                     })
                   }
                 />
-                <select
+                <Select
                   aria-label={`Type de la phase ${i + 1}`}
                   value={phase.kind}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setDraft({
                       ...draft,
                       id: 'custom',
                       phases: draft.phases.map((p, j) =>
-                        j === i ? { ...p, kind: e.target.value as 'work' | 'break' } : p,
+                        j === i ? { ...p, kind: value as 'work' | 'break' } : p,
                       ),
                     })
                   }
                 >
                   <option value="work">Travail</option>
                   <option value="break">Pause</option>
-                </select>
+                </Select>
                 <label>
                   <input
                     aria-label={`Minutes de la phase ${i + 1}`}

@@ -1,3 +1,4 @@
+import { chooseOption } from './select-helper'
 import { expect, test } from '@playwright/test'
 
 test('keyboard position, size and clock toggles persist after reload', async ({ page }) => {
@@ -17,8 +18,11 @@ test('keyboard position, size and clock toggles persist after reload', async ({ 
   await expect(studio.getByRole('checkbox', { name: 'Secondes', exact: true })).toBeChecked()
   await studio.getByRole('checkbox', { name: 'Date', exact: true }).click()
   await expect(studio.getByRole('checkbox', { name: 'Date', exact: true })).not.toBeChecked()
-  await studio.getByRole('combobox', { name: 'Format', exact: true }).selectOption('12')
-  await expect(studio.getByRole('combobox', { name: 'Format', exact: true })).toHaveValue('12')
+  await chooseOption(studio.getByRole('combobox', { name: 'Format', exact: true }), '12')
+  await expect(studio.getByRole('combobox', { name: 'Format', exact: true })).toHaveAttribute(
+    'data-value',
+    '12',
+  )
   const layout = await clock.getAttribute('style')
   await page.reload()
   await expect(clock).toHaveAttribute('style', layout!)
@@ -26,7 +30,10 @@ test('keyboard position, size and clock toggles persist after reload', async ({ 
   await studio.getByRole('button', { name: /^Horloge/ }).click()
   await expect(studio.getByRole('checkbox', { name: 'Secondes', exact: true })).toBeChecked()
   await expect(studio.getByRole('checkbox', { name: 'Date', exact: true })).not.toBeChecked()
-  await expect(studio.getByRole('combobox', { name: 'Format', exact: true })).toHaveValue('12')
+  await expect(studio.getByRole('combobox', { name: 'Format', exact: true })).toHaveAttribute(
+    'data-value',
+    '12',
+  )
 })
 
 test('background slider keyboard changes persist', async ({ page }) => {
@@ -39,13 +46,19 @@ test('background slider keyboard changes persist', async ({ page }) => {
   await dim.focus()
   await page.keyboard.press('ArrowRight')
   await expect(dim).toHaveValue(expectedDim)
-  await studio.getByRole('combobox', { name: 'Cadrage du fond' }).selectOption('0% 50%')
-  await expect(studio.getByRole('combobox', { name: 'Cadrage du fond' })).toHaveValue('0% 50%')
+  await chooseOption(studio.getByRole('combobox', { name: 'Cadrage du fond' }), '0% 50%')
+  await expect(studio.getByRole('combobox', { name: 'Cadrage du fond' })).toHaveAttribute(
+    'data-value',
+    '0% 50%',
+  )
   await page.reload()
   await page.getByRole('button', { name: 'Studio', exact: true }).click()
   await studio.getByRole('button', { name: 'Décor', exact: true }).click()
   await expect(dim).toHaveValue(expectedDim)
-  await expect(studio.getByRole('combobox', { name: 'Cadrage du fond' })).toHaveValue('0% 50%')
+  await expect(studio.getByRole('combobox', { name: 'Cadrage du fond' })).toHaveAttribute(
+    'data-value',
+    '0% 50%',
+  )
 })
 
 test('preferences checkbox changes survive reload', async ({ page }) => {
@@ -71,13 +84,19 @@ test('a hidden duplicate clock can be restored with its settings', async ({ page
   await studio.getByRole('button', { name: 'Dupliquer', exact: true }).click()
   const clocks = page.getByRole('article', { name: 'Horloge', exact: true })
   await expect(clocks).toHaveCount(2)
-  await studio.getByRole('combobox', { name: 'Format', exact: true }).selectOption('12')
-  await expect(studio.getByRole('combobox', { name: 'Format', exact: true })).toHaveValue('12')
+  await chooseOption(studio.getByRole('combobox', { name: 'Format', exact: true }), '12')
+  await expect(studio.getByRole('combobox', { name: 'Format', exact: true })).toHaveAttribute(
+    'data-value',
+    '12',
+  )
   await clocks.nth(1).getByRole('button', { name: 'Masquer Horloge', exact: true }).click()
   await expect(clocks).toHaveCount(1)
   await studio.getByRole('button', { name: /Horloge 2 · Masquée/ }).click()
   await expect(clocks).toHaveCount(2)
-  await expect(studio.getByRole('combobox', { name: 'Format', exact: true })).toHaveValue('12')
+  await expect(studio.getByRole('combobox', { name: 'Format', exact: true })).toHaveAttribute(
+    'data-value',
+    '12',
+  )
   await page.reload()
   await expect(clocks).toHaveCount(2)
 })

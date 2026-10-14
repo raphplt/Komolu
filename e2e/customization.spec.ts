@@ -1,3 +1,4 @@
+import { chooseOption } from './select-helper'
 import { readFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
 import legacy from '../src/core/fixtures/v1-backup.json' with { type: 'json' }
@@ -31,18 +32,24 @@ test('scenes, independent palette, solid and gradient settings survive reload', 
   await page.goto('./')
   const studio = await openStudio(page)
   await studio.getByRole('button', { name: 'Décor', exact: true }).click()
-  await studio.getByRole('combobox', { name: 'Scène', exact: true }).selectOption('cozy')
-  await expect(studio.getByRole('combobox', { name: 'Scène', exact: true })).toHaveValue('cozy')
-  await expect(studio.getByRole('combobox', { name: 'Palette des widgets' })).toHaveValue('minimal')
-  await studio.getByRole('combobox', { name: 'Palette des widgets' }).selectOption('deep')
+  await chooseOption(studio.getByRole('combobox', { name: 'Scène', exact: true }), 'cozy')
+  await expect(studio.getByRole('combobox', { name: 'Scène', exact: true })).toHaveAttribute(
+    'data-value',
+    'cozy',
+  )
+  await expect(studio.getByRole('combobox', { name: 'Palette des widgets' })).toHaveAttribute(
+    'data-value',
+    'minimal',
+  )
+  await chooseOption(studio.getByRole('combobox', { name: 'Palette des widgets' }), 'deep')
   await expect(page.locator('main.app')).toHaveClass(/scene-deep/)
-  await studio.getByRole('combobox', { name: 'Type de fond' }).selectOption('solid')
+  await chooseOption(studio.getByRole('combobox', { name: 'Type de fond' }), 'solid')
   await studio.getByLabel('Couleur du fond', { exact: true }).fill('#abcdef')
   await expect(page.locator('.generated-background')).toHaveCSS(
     'background-color',
     'rgb(171, 205, 239)',
   )
-  await studio.getByRole('combobox', { name: 'Type de fond' }).selectOption('gradient')
+  await chooseOption(studio.getByRole('combobox', { name: 'Type de fond' }), 'gradient')
   await studio.getByLabel('Première couleur du dégradé').fill('#123456')
   await expect(page.locator('.generated-background')).toHaveCSS(
     'background-image',
@@ -64,9 +71,18 @@ test('scenes, independent palette, solid and gradient settings survive reload', 
   await page.reload()
   await openStudio(page)
   await studio.getByRole('button', { name: 'Décor', exact: true }).click()
-  await expect(studio.getByRole('combobox', { name: 'Scène', exact: true })).toHaveValue('cozy')
-  await expect(studio.getByRole('combobox', { name: 'Palette des widgets' })).toHaveValue('deep')
-  await expect(studio.getByRole('combobox', { name: 'Type de fond' })).toHaveValue('gradient')
+  await expect(studio.getByRole('combobox', { name: 'Scène', exact: true })).toHaveAttribute(
+    'data-value',
+    'cozy',
+  )
+  await expect(studio.getByRole('combobox', { name: 'Palette des widgets' })).toHaveAttribute(
+    'data-value',
+    'deep',
+  )
+  await expect(studio.getByRole('combobox', { name: 'Type de fond' })).toHaveAttribute(
+    'data-value',
+    'gradient',
+  )
   await expect(studio.getByLabel('Couleur du fond', { exact: true })).toHaveCount(0)
   await expect(studio.getByLabel('Première couleur du dégradé')).toHaveValue('#123456')
   await expect(studio.getByLabel('Seconde couleur du dégradé')).toHaveValue('#789abc')
@@ -83,13 +99,16 @@ test('clock colour and shadow persist and the theme colour can be restored', asy
     .getByRole('article', { name: 'Horloge', exact: true })
     .locator('.clock-content')
   await expect(clock).toHaveCSS('color', 'rgb(128, 64, 32)')
-  await studio.getByRole('combobox', { name: 'Ombre de l’horloge' }).selectOption('strong')
+  await chooseOption(studio.getByRole('combobox', { name: 'Ombre de l’horloge' }), 'strong')
   await expect(clock.locator('.clock-time')).not.toHaveCSS('text-shadow', 'none')
   await page.reload()
   await expect(clock).toHaveCSS('color', 'rgb(128, 64, 32)')
   await openStudio(page)
   await studio.getByRole('button', { name: /^Horloge/ }).click()
-  await expect(studio.getByRole('combobox', { name: 'Ombre de l’horloge' })).toHaveValue('strong')
+  await expect(studio.getByRole('combobox', { name: 'Ombre de l’horloge' })).toHaveAttribute(
+    'data-value',
+    'strong',
+  )
   await studio.getByRole('button', { name: 'Couleur du thème' }).click()
   await expect(clock).not.toHaveCSS('color', 'rgb(128, 64, 32)')
 })

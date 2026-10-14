@@ -312,7 +312,7 @@ hr {
   align-items: center;
   width: 100%;
 }
-.timer-top .eyebrow {
+.timer-top h2 {
   margin: 0;
 }
 .icon-button {
@@ -446,6 +446,7 @@ hr {
 .tasks-content .eyebrow {
   margin-bottom: 11px;
 }
+.timer-top h2,
 .tasks-content h2 {
   font-family: Georgia, serif;
   font-size: 22px;
@@ -454,6 +455,9 @@ hr {
   justify-content: space-between;
   gap: 5px;
   margin-bottom: 24px;
+}
+.timer-top h2 {
+  margin-bottom: 0;
 }
 .count {
   font:
@@ -780,7 +784,7 @@ hr {
   margin: 9px 0;
 }
 .phase input,
-.phase select {
+.phase .select-trigger {
   width: 100%;
   padding: 8px 5px;
   font-size: 10px;
@@ -961,6 +965,7 @@ kbd {
 .studio-open .notes-content {
   padding: 25px 15px 15px;
 }
+.studio-open .timer-top h2,
 .studio-open .tasks-content h2 {
   font-size: 18px;
 }
@@ -1166,6 +1171,7 @@ kbd {
     padding-left: 19px;
     padding-right: 19px;
   }
+  .timer-top h2,
   .tasks-content h2 {
     font-size: 20px;
   }
@@ -1268,6 +1274,7 @@ kbd {
   .task-completed {
     margin-top: 20px !important;
   }
+  .timer-top h2,
   .tasks-content h2 {
     font-size: 23px;
   }
@@ -1545,4 +1552,66 @@ kbd {
     min-width: 0;
     overflow-wrap: anywhere;
   }
+}
+
+.custom-select {
+  display: block;
+  min-width: 0;
+  width: 100%;
+}
+.select-trigger {
+  width: 100%;
+  justify-content: space-between;
+  text-align: left;
+  background: var(--field);
+  padding: 10px 12px;
+}
+.select-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-trigger > svg {
+  flex-shrink: 0;
+}
+.select-menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.select-option.active {
+  background: var(--accent-soft);
+}
+.select-option[aria-selected='true'] {
+  font-weight: 600;
+}
+.select-option[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: default;
+}
+.widget[data-gesturing] {
+  z-index: 10;
+  will-change: transform;
+  user-select: none;
+}
+.widget[data-gesturing] .drag-handle {
+  cursor: grabbing;
 }

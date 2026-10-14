@@ -1,3 +1,4 @@
+import { Select } from './Select'
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ImagePlus, Trash2 } from 'lucide-react'
@@ -301,15 +302,15 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
       )}
       <label>
         Type de fond
-        <select
+        <Select
           aria-label="Type de fond"
           value={
             workspace.background.type === 'image' || workspace.background.type === 'video'
               ? 'media'
               : workspace.background.type
           }
-          onChange={(event) => {
-            const type = event.target.value as 'scene' | 'solid' | 'gradient'
+          onChange={(value) => {
+            const type = value as 'scene' | 'solid' | 'gradient'
             if (type !== 'scene' && type !== 'solid' && type !== 'gradient') return
             void change({ type })
           }}
@@ -320,29 +321,29 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
           {(workspace.background.type === 'image' || workspace.background.type === 'video') && (
             <option value="media">Média personnel</option>
           )}
-        </select>
+        </Select>
       </label>
       <label>
         {workspace.background.type === 'scene' && !workspace.background.wallpaperId
           ? 'Scène'
           : 'Scène de secours'}
-        <select
+        <Select
           aria-label="Scène"
           value={workspace.background.scene}
-          onChange={(event) => void change({ scene: event.target.value as Scene })}
+          onChange={(value) => void change({ scene: value as Scene })}
         >
           <option value="minimal">Minimal</option>
           <option value="cozy">Cozy</option>
           <option value="deep">Deep Work</option>
-        </select>
+        </Select>
       </label>
       <label>
         Palette des widgets
-        <select
+        <Select
           aria-label="Palette des widgets"
           value={workspace.palette}
-          onChange={(event) => {
-            const palette = event.target.value as Scene
+          onChange={(value) => {
+            const palette = value as Scene
             void actions
               .update((state) => {
                 const target = state.workspaces.find((item) => item.id === workspace.id)
@@ -354,7 +355,7 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
           <option value="minimal">Claire · sauge</option>
           <option value="cozy">Chaude · caramel</option>
           <option value="deep">Sombre · mauve</option>
-        </select>
+        </Select>
       </label>
       {workspace.background.type === 'solid' && (
         <label className="media-color-label">
@@ -467,17 +468,17 @@ export function BackgroundSettings({ workspace }: { workspace: Workspace }) {
       </label>
       <label>
         Cadrage
-        <select
+        <Select
           aria-label="Cadrage du fond"
           value={workspace.background.position}
-          onChange={(event) => void change({ position: event.target.value })}
+          onChange={(value) => void change({ position: value })}
         >
           <option value="50% 50%">Centré</option>
           <option value="0% 50%">À gauche</option>
           <option value="100% 50%">À droite</option>
           <option value="50% 0%">En haut</option>
           <option value="50% 100%">En bas</option>
-        </select>
+        </Select>
       </label>
       <label className="media-color-label">
         Voile de couleur

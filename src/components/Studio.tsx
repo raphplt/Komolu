@@ -1,4 +1,5 @@
-import { useRef, useState, type ReactNode, type PointerEvent } from 'react'
+import { Select } from './Select'
+import { useEffect, useRef, useState, type ReactNode, type PointerEvent } from 'react'
 import {
   ArrowDown,
   ArrowLeft,
@@ -35,6 +36,8 @@ export function WidgetFrame({
   children: ReactNode
 }) {
   const [preview, setPreview] = useState<Widget['layout'] | null>(null)
+  const frame = useRef<HTMLElement>(null)
+  const animation = useRef<number | null>(null)
   const gesture = useRef<{
     x: number
     y: number
@@ -42,11 +45,35 @@ export function WidgetFrame({
     resize: boolean
     width: number
     row: number
+    cardWidth: number
+    cardHeight: number
+    canvas: HTMLElement
+    canvasTop: number
+    dx: number
+    dy: number
   } | null>(null)
+  useEffect(
+    () => () => {
+      if (animation.current !== null) cancelAnimationFrame(animation.current)
+    },
+    [],
+  )
+  const clearMotion = () => {
+    if (animation.current !== null) cancelAnimationFrame(animation.current)
+    animation.current = null
+    const el = frame.current
+    if (el) {
+      el.style.transform = ''
+      el.style.width = ''
+      el.style.height = ''
+      delete el.dataset.gesturing
+    }
+  }
   const start = (event: PointerEvent, resize: boolean) => {
-    if (event.button !== 0) return
+    if (event.button !== 0 || gesture.current) return
     const canvas = event.currentTarget.closest('.widget-grid') as HTMLElement
     const style = getComputedStyle(canvas)
+    const bounds = frame.current!.getBoundingClientRect()
     gesture.current = {
       x: event.clientX,
       y: event.clientY,
@@ -54,46 +81,78 @@ export function WidgetFrame({
       resize,
       width: (canvas.clientWidth + parseFloat(style.columnGap)) / 12,
       row: parseFloat(style.gridAutoRows) + parseFloat(style.rowGap),
+      cardWidth: bounds.width,
+      cardHeight: bounds.height,
+      canvas,
+      canvasTop: canvas.getBoundingClientRect().top,
+      dx: 0,
+      dy: 0,
     }
+    frame.current!.dataset.gesturing = resize ? 'resize' : 'move'
     event.currentTarget.setPointerCapture(event.pointerId)
     onSelect(widget.id)
     event.preventDefault()
   }
-  const move = (event: PointerEvent) => {
+  const track = (event: PointerEvent) => {
     const g = gesture.current
     if (!g) return
-    const dx = Math.round((event.clientX - g.x) / g.width)
-    const dy = Math.round((event.clientY - g.y) / g.row)
     const min = widgetRegistry[widget.type]
-    setPreview(
-      g.resize
-        ? {
-            ...g.layout,
-            w: Math.min(12 - g.layout.x, Math.max(min.minW, g.layout.w + dx)),
-            h: Math.max(min.minH, Math.min(12, g.layout.h + dy)),
-          }
-        : {
-            ...g.layout,
-            x: Math.max(0, Math.min(12 - g.layout.w, g.layout.x + dx)),
-            y: Math.max(0, Math.min(500, g.layout.y + dy)),
-          },
-    )
+    const dx = event.clientX - g.x
+    const dy = event.clientY - g.y + g.canvasTop - g.canvas.getBoundingClientRect().top
+    g.dx = g.resize
+      ? Math.max(
+          (min.minW - g.layout.w) * g.width,
+          Math.min((12 - g.layout.x - g.layout.w) * g.width, dx),
+        )
+      : Math.max(-g.layout.x * g.width, Math.min((12 - g.layout.w - g.layout.x) * g.width, dx))
+    g.dy = g.resize
+      ? Math.max((min.minH - g.layout.h) * g.row, Math.min((12 - g.layout.h) * g.row, dy))
+      : Math.max(-g.layout.y * g.row, Math.min((500 - g.layout.y) * g.row, dy))
   }
-  const end = () => {
+  const move = (event: PointerEvent) => {
+    track(event)
+    if (!gesture.current || animation.current !== null) return
+    animation.current = requestAnimationFrame(() => {
+      animation.current = null
+      const g = gesture.current
+      const el = frame.current
+      if (!g || !el) return
+      if (g.resize) {
+        el.style.width = `${g.cardWidth + g.dx}px`
+        el.style.height = `${g.cardHeight + g.dy}px`
+      } else el.style.transform = `translate3d(${g.dx}px, ${g.dy}px, 0)`
+    })
+  }
+  const cancel = () => {
     gesture.current = null
-    if (preview)
-      act(
-        actions
-          .workspace((w) => {
-            const item = w.widgets.find((i) => i.id === widget.id)
-            if (item) w.widgets = placeWidget(w.widgets, item.id, preview)
-          })
-          .finally(() => setPreview(null)),
-      )
-    else setPreview(null)
+    clearMotion()
+    setPreview(null)
+  }
+  const end = (event: PointerEvent) => {
+    track(event)
+    const g = gesture.current
+    if (!g) return
+    const dx = Math.round(g.dx / g.width)
+    const dy = Math.round(g.dy / g.row)
+    const layout = g.resize
+      ? { ...g.layout, w: g.layout.w + dx, h: g.layout.h + dy }
+      : { ...g.layout, x: g.layout.x + dx, y: g.layout.y + dy }
+    gesture.current = null
+    clearMotion()
+    if (dx === 0 && dy === 0) return
+    setPreview(layout)
+    act(
+      actions
+        .workspace((w) => {
+          const item = w.widgets.find((i) => i.id === widget.id)
+          if (item) w.widgets = placeWidget(w.widgets, item.id, layout)
+        })
+        .finally(() => setPreview(null)),
+    )
   }
   return (
     <article
+      ref={frame}
       className={`widget card widget-${widget.type} ${studio ? 'editable' : ''} ${selected && studio ? 'selected' : ''}`}
       style={widgetStyle({ ...widget, layout: preview ?? widget.layout })}
       aria-label={widgetRegistry[widget.type].title}
@@ -109,10 +168,7 @@ export function WidgetFrame({
             onPointerDown={(e) => start(e, false)}
             onPointerMove={move}
             onPointerUp={end}
-            onPointerCancel={() => {
-              gesture.current = null
-              setPreview(null)
-            }}
+            onPointerCancel={cancel}
             onClick={() => onSelect(widget.id)}
           >
             <Grip size={14} />
@@ -142,10 +198,7 @@ export function WidgetFrame({
           onPointerDown={(e) => start(e, true)}
           onPointerMove={move}
           onPointerUp={end}
-          onPointerCancel={() => {
-            gesture.current = null
-            setPreview(null)
-          }}
+          onPointerCancel={cancel}
         >
           <MoveDiagonal2 size={17} />
         </button>
@@ -398,10 +451,11 @@ export function Studio({
                 <>
                   <label className="field">
                     Affichage
-                    <select
+                    <Select
+                      aria-label="Affichage"
                       value={widget.settings.clockStyle ?? 'digital'}
-                      onChange={(e) => {
-                        const value = e.currentTarget.value as 'digital' | 'analog'
+                      onChange={(selectedValue) => {
+                        const value = selectedValue as 'digital' | 'analog'
                         update((w) => {
                           w.settings.clockStyle = value
                         })
@@ -409,14 +463,15 @@ export function Studio({
                     >
                       <option value="digital">Numérique</option>
                       <option value="analog">À aiguilles</option>
-                    </select>
+                    </Select>
                   </label>
                   <label className="field">
                     Format
-                    <select
+                    <Select
+                      aria-label="Format"
                       value={widget.settings.clockFormat ?? '24'}
-                      onChange={(e) => {
-                        const value = e.currentTarget.value as '12' | '24'
+                      onChange={(selectedValue) => {
+                        const value = selectedValue as '12' | '24'
                         update((w) => {
                           w.settings.clockFormat = value
                         })
@@ -424,7 +479,7 @@ export function Studio({
                     >
                       <option value="24">24 heures</option>
                       <option value="12">12 heures</option>
-                    </select>
+                    </Select>
                   </label>
                   <label className="check-field">
                     <input
@@ -508,10 +563,11 @@ export function Studio({
                   )}
                   <label className="field">
                     Ombre de l’horloge
-                    <select
+                    <Select
+                      aria-label="Ombre de l’horloge"
                       value={widget.settings.shadow ?? 'none'}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value as 'none' | 'soft' | 'strong'
+                      onChange={(selectedValue) => {
+                        const value = selectedValue as 'none' | 'soft' | 'strong'
                         update((current) => {
                           current.settings.shadow = value
                         })
@@ -520,14 +576,15 @@ export function Studio({
                       <option value="none">Aucune</option>
                       <option value="soft">Légère</option>
                       <option value="strong">Marquée</option>
-                    </select>
+                    </Select>
                   </label>
                   <label className="field">
                     Typographie
-                    <select
+                    <Select
+                      aria-label="Typographie"
                       value={widget.settings.typography ?? 'sans'}
-                      onChange={(e) => {
-                        const value = e.currentTarget.value as 'sans' | 'serif'
+                      onChange={(selectedValue) => {
+                        const value = selectedValue as 'sans' | 'serif'
                         update((w) => {
                           w.settings.typography = value
                         })
@@ -535,14 +592,15 @@ export function Studio({
                     >
                       <option value="sans">Simple</option>
                       <option value="serif">Littéraire</option>
-                    </select>
+                    </Select>
                   </label>
                   <label className="field">
                     Alignement
-                    <select
+                    <Select
+                      aria-label="Alignement"
                       value={widget.settings.alignment ?? 'left'}
-                      onChange={(e) => {
-                        const value = e.currentTarget.value as 'left' | 'center'
+                      onChange={(selectedValue) => {
+                        const value = selectedValue as 'left' | 'center'
                         update((w) => {
                           w.settings.alignment = value
                         })
@@ -550,14 +608,15 @@ export function Studio({
                     >
                       <option value="left">À gauche</option>
                       <option value="center">Centré</option>
-                    </select>
+                    </Select>
                   </label>
                   <label className="field">
                     Taille
-                    <select
+                    <Select
+                      aria-label="Taille"
                       value={widget.settings.clockSize ?? 'large'}
-                      onChange={(e) => {
-                        const value = e.currentTarget.value as 'small' | 'large'
+                      onChange={(selectedValue) => {
+                        const value = selectedValue as 'small' | 'large'
                         update((w) => {
                           w.settings.clockSize = value
                         })
@@ -565,7 +624,7 @@ export function Studio({
                     >
                       <option value="large">Grande</option>
                       <option value="small">Discrète</option>
-                    </select>
+                    </Select>
                   </label>
                 </>
               )}

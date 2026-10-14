@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { Select } from './Select'
+import { useState, type CSSProperties } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../core/storage'
 import {
@@ -168,6 +169,7 @@ export function AudioPanel({
           min="0"
           max="1"
           step="0.01"
+          style={{ '--range-fill': `${workspace.audio.master * 100}%` } as CSSProperties}
           value={workspace.audio.master}
           onChange={(event) => {
             const value = Number(event.target.value)
@@ -223,6 +225,7 @@ export function AudioPanel({
                       min="0"
                       max="1"
                       step="0.01"
+                      style={{ '--range-fill': `${track.volume * 100}%` } as CSSProperties}
                       value={track.volume}
                       disabled={!track.enabled}
                       onChange={(event) =>
@@ -268,11 +271,11 @@ export function AudioPanel({
           {Boolean(library?.items.length) && (
             <label className="audio-library-select">
               Mes sons importés
-              <select
+              <Select
                 aria-label="Choisir un son importé"
                 value=""
-                onChange={(event) => {
-                  const media = library?.items.find((item) => item.id === event.target.value)
+                onChange={(value) => {
+                  const media = library?.items.find((item) => item.id === value)
                   if (!media) return
                   void change((target) => {
                     if (target.audio.tracks.some((track) => track.mediaId === media.id))
@@ -296,12 +299,9 @@ export function AudioPanel({
                     {media.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           )}
-          <p className="media-hint">
-            Boucles stéréo ≤ 2 min · 50 Mo. Les sons restent sur cet appareil.
-          </p>
           <a
             className="media-hint"
             href={`${import.meta.env.BASE_URL}audio/CREDITS.txt`}
