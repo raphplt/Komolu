@@ -13,6 +13,7 @@ import {
   PanelsTopLeft,
   Settings2,
   SlidersHorizontal,
+  Users,
   Volume2,
   VolumeX,
 } from 'lucide-react'
@@ -26,6 +27,9 @@ import { Logo } from './components/Logo'
 import { useRadio } from './hooks/useRadio'
 import { RadioPanel } from './components/RadioPanel'
 import { AudioPanel } from './components/AudioPanel'
+import { RoomPanel } from './components/RoomPanel'
+import { useRoom } from './hooks/useRoom'
+import { DEFAULT_CONFIG, loadInstanceConfig, type InstanceConfig } from './collab/config'
 import { ClockWidget, NotesWidget, TasksWidget, TimerWidget } from './components/Widgets'
 import { Studio, WidgetFrame } from './components/Studio'
 import { TimerSettings } from './components/TimerSettings'
@@ -34,7 +38,8 @@ import { DataPanel } from './components/DataPanel'
 import { Scene } from './components/Scene'
 import { Dialog } from './components/shared'
 import { act } from './core/ui'
-type Panel = 'workspaces' | 'timer' | 'thoughts' | 'preferences' | 'data' | 'audio' | 'radio' | null
+type Panel =
+  'workspaces' | 'timer' | 'thoughts' | 'preferences' | 'data' | 'audio' | 'radio' | 'room' | null
 export default function App() {
   const { state, error, clearError } = useAppState()
   if (!state)
@@ -60,7 +65,23 @@ function Experience({
   const audio = useAudio(workspace.audio)
   const radio = useRadio(state.dataEpoch)
   useCompletionSound(state.timer, true, state.dataEpoch)
-  const [panel, setPanel] = useState<Panel>(null)
+  const [config, setConfig] = useState<InstanceConfig | null>(null)
+  useEffect(() => {
+    void loadInstanceConfig()
+      .then(setConfig)
+      .catch(() => setConfig(DEFAULT_CONFIG))
+  }, [])
+  const room = useRoom(config)
+  const [panel, setPanel] = useState<Panel>(() =>
+    typeof window !== 'undefined' && window.location.hash.includes('join=') ? 'room' : null,
+  )
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash.includes('join=')) setPanel('room')
+    }
+    window.addEventListener('hashchange', handleHash)
+    return () => window.removeEventListener('hashchange', handleHash)
+  }, [])
   const [studio, setStudio] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
   const [fullscreen, setFullscreen] = useState(!!document.fullscreenElement)
@@ -259,6 +280,26 @@ function Experience({
                 <span className="radio-live-dot" aria-label="Radio active" />
               )}
             </button>
+            {(config?.collaboration.enabled ||
+              room.snapshot.phase === 'joined' ||
+              room.pendingInvite) && (
+              <button
+                className="dock-room"
+                aria-label="Ouvrir la salle de coworking"
+                onClick={() => setPanel('room')}
+              >
+                <Users size={18} />
+                <span>
+                  {room.snapshot.phase === 'joined'
+                    ? `Salle (${room.snapshot.room?.members.length ?? 0})`
+                    : 'Salle'}
+                </span>
+                {room.snapshot.phase === 'joined' && (
+                  <span className="room-live-dot" aria-label="Salle active" />
+                )}
+                {room.snapshot.unread > 0 && <span className="notification-dot" />}
+              </button>
+            )}
             <span className="dock-divider" />
             <button
               className="icon-button"
@@ -318,7 +359,10 @@ function Experience({
           state={state}
           playing={audio.playing}
           radioActive={radio.status === 'playing' || radio.status === 'loading'}
+          roomActive={room.snapshot.phase === 'joined'}
+          roomUnread={room.snapshot.unread}
           onRadio={() => setPanel('radio')}
+          onRoom={() => setPanel('room')}
           onToggle={toggleTimer}
           onAudio={() => setPanel('audio')}
           onThought={() => setPanel('thoughts')}
@@ -343,6 +387,11 @@ function Experience({
           <AudioPanel workspace={workspace} audio={audio} />
         </Dialog>
       )}
+      {panel === 'room' && (
+        <Dialog title="Coworking" onClose={close}>
+          <RoomPanel roomController={room} onClose={close} />
+        </Dialog>
+      )}
     </main>
   )
 }
@@ -354,7 +403,10 @@ function FocusToolbar({
   state,
   playing,
   radioActive,
+  roomActive,
+  roomUnread,
   onRadio,
+  onRoom,
   onToggle,
   onAudio,
   onThought,
@@ -364,7 +416,10 @@ function FocusToolbar({
   state: AppState
   playing: boolean
   radioActive: boolean
+  roomActive: boolean
+  roomUnread: number
   onRadio: () => void
+  onRoom: () => void
   onToggle: () => void
   onAudio: () => void
   onThought: () => void
@@ -394,6 +449,16 @@ function FocusToolbar({
       <button className="icon-button" aria-label="Ouvrir la radio" title="Radio" onClick={onRadio}>
         <Radio size={18} />
         {radioActive && <span className="radio-live-dot" aria-label="Radio active" />}
+      </button>
+      <button
+        className="icon-button"
+        aria-label="Ouvrir la salle de coworking"
+        title="Coworking"
+        onClick={onRoom}
+      >
+        <Users size={18} />
+        {roomActive && <span className="room-live-dot" aria-label="Salle active" />}
+        {roomUnread > 0 && <span className="notification-dot" />}
       </button>
       <button
         className="icon-button"

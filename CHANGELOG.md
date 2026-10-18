@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.0 — 2026-10-18 · Salles de coworking et collaboration partagée (V2)
+
+Livraison du jalon V2.0 « Shared Focus » conformément à la feuille de route du produit (`docs/product.md`). Le frontend statique conserve son indépendance et fonctionne toujours local-first sans aucun compte requis ; les salles de coworking s’activent comme service optionnel temps réel.
+
+- **Salles de coworking éphémères** : création et ralliement d’espaces partagés via des liens d’invitation cryptographiquement imprévisibles (`#join=roomId.code`). Le secret de l’invitation réside dans le fragment URL, qui n’est jamais transmis au serveur par les navigateurs.
+- **Présence discrète** : statut en temps réel (Concentré·e, En pause, Disponible, ou Auto qui s'aligne automatiquement sur les phases du timer partagé). Affichage épuré des participants avec indicateur de présence et rôles.
+- **Minuterie de salle synchronisée** : serveur autoritaire calculant les échéances et le décompte sans dérive, avec estimation RTT de l'asymétrie d'horloge. Contrôle de la minuterie paramétrable (hôte seul ou tous les membres).
+- **Discussion bienveillante et silencieuse** : chat compact avec historique borné, compteur de non-lus et notifications silencieuses en mode Focus pour ne jamais briser la concentration. Les messages sont strictement aseptisés contre les attaques XSS et les caractères bidi trompeurs.
+- **Modération et contrôle d’hôte** : expulsion de membres indésirables, verrouillage de salle aux nouvelles entrées et renouvellement à la demande du lien d’invitation.
+- **Confidentialité absolue et zéro rétention** : architecture en mémoire sans base de données, sans persistance sur disque, sans rétention de messages et sans journalisation des adresses IP ou des pseudonymes. Une salle vide et ses messages disparaissent instantanément.
+- **Sécurité et protection anti-abus** : limitation de débit par seau à jetons (Token Bucket) par session et par fenêtre glissante par IP, protection contre les payloads volumineux et fermeture des connexions abusives.
+- **Architecture modulaire V2** : service WebSocket autonome écrit en TypeScript strict et exécuté directement par le moteur natif de Node 24 sans étape de compilation, avec profil Docker Compose `rooms` (`docker compose --profile rooms up -d`).
+- **Configuration d’instance (`komolu.json`)** : permet aux auto-hébergeurs d’activer ou désactiver la collaboration et de configurer l’URL du service sans recompiler l’application cliente.
+
 ## 1.1.0-rc.2 — 2026-10-14 · candidate en validation
 
 - Galerie de fonds avec paysages, intérieurs et appartements anime, aperçus, filtres et persistance par espace. Les images intégrées restent partageables sans embarquer de média personnel.

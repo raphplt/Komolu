@@ -30,6 +30,38 @@ docker compose down
 
 Le conteneur ne stocke pas les données personnelles. Lors de la prochaine ouverture, l’application peut toutefois migrer les données du navigateur : cette candidate passe du schéma 1 au schéma 2. Télécharge une sauvegarde avant la mise à jour. Revenir au tag 1.0.0 ne rétrograde pas IndexedDB : utilise une origine distincte et une sauvegarde version 1 pour tester cette ancienne version. [Migration et compatibilité](portability.md).
 
+## Salles de coworking (V2 facultative)
+
+Le service de salles en temps réel est optionnel (ADR-007). Pour l’activer sur votre instance Docker :
+
+```bash
+docker compose --profile rooms up --build --detach --wait
+```
+
+Le service démarre sur le port `8787` (`127.0.0.1:8787:8787`).
+Le fichier de configuration client `komolu.json` (situé à la racine de la distribution statique) permet d'activer la collaboration et de pointer vers le service :
+
+```json
+{
+  "collaboration": {
+    "enabled": true,
+    "url": "rooms"
+  }
+}
+```
+
+Variables d’environnement configurables pour le service `rooms` :
+
+- `PORT` (défaut : `8787`)
+- `HOST` (défaut : `0.0.0.0`)
+- `KOMOLU_MAX_ROOMS` (défaut : `500`)
+- `KOMOLU_MAX_MEMBERS` (défaut : `16`)
+- `KOMOLU_ROOMS_PER_HOUR` (défaut : `10` créations par heure par adresse IP)
+- `KOMOLU_ALLOWED_ORIGINS` (liste d’origines autorisées séparées par des virgules, ex: `https://komolu.mon-domaine.fr`)
+- `KOMOLU_TRUST_PROXY` (`true` si placé derrière un reverse proxy de confiance)
+
+Le service est conçu sans état persistant : aucun message, pseudonyme ou adresse n’est écrit sur disque ni conservé dans les journaux. Dès qu'une salle se vide, elle est immédiatement oubliée.
+
 ## Exposer sur Internet
 
 HTTPS est nécessaire hors localhost (notamment pour `crypto.randomUUID` et le presse-papiers) : une URL HTTP sur une adresse LAN ne constitue pas une installation prise en charge. Utilise un domaine et un reverse proxy HTTPS devant `127.0.0.1:8080`. Le proxy doit pouvoir joindre la boucle locale de l'hôte ; un proxy lui-même conteneurisé doit plutôt partager un réseau Docker avec Komolu et joindre son port interne 8080. Ne publie pas le serveur de développement Vite en production.

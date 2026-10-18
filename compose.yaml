@@ -11,3 +11,20 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+
+  rooms:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.rooms
+    profiles:
+      - rooms
+    ports:
+      - '127.0.0.1:8787:8787'
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
